@@ -9,7 +9,6 @@ out vec3 Normal;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 rev_aff;
 uniform mat4 jointMatrices[29];
 void main()
 {
@@ -18,7 +17,7 @@ void main()
         totalPos = totalPos + Weights[i]*jointMatrices[int(Indices[i])]*vec4(aPos, 1.0);
     }
     //totalPos = jointMatrices[int(Indices[0])]*vec4(aPos,1);
-    FragPos = vec3(rev_aff*model * totalPos);
+    FragPos = vec3(model * totalPos);
     Normal = mat3(transpose(inverse(model))) * aNormal;  
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }

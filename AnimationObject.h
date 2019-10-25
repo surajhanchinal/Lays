@@ -18,13 +18,10 @@ class AnimationObject{
             Parser parser(MeshPath);
             mesh = parser.parseMesh();
             mesh.SetupMesh();
-            fpCamera = new Camera(Eigen::Vector3f(1.34277,11.0314,-0.18954),Eigen::Vector3f(0,1,0),80,1920.0f/1022.0f,0.1f,1000.0f,-0.1,1.278);
-            aff = Eigen::Affine3f::Identity();
-            aff.prerotate(Eigen::AngleAxis<float>(-M_PI/2,Eigen::Vector3f(1,0,0)));
-            rev_aff = Eigen::Affine3f::Identity();
-            //rev_aff.prerotate(Eigen::AngleAxis<float>(-M_PI/2,Eigen::Vector3f(1,0,0)));
-            rev_aff.translate(Eigen::Vector3f(0,5,2));
-            aff.translate(Eigen::Vector3f(0,5,2));
+            fpCamera = new Camera(Eigen::Vector3f(1.34277,11.0314+2,-0.18954-5),Eigen::Vector3f(0,1,0),45,1920.0f/1022.0f,0.1f,1000.0f,-0.1,1.278);
+            model = Eigen::Matrix4f::Identity();
+            model.block<3,3>(0,0) = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()).toRotationMatrix();
+            model.block<3,1>(0,3) = Eigen::Vector3f(0,2,-5);
         }
         void addAnimation(string name,string path,int start_frame,float frameTime,Eigen::Vector3f vel){
             Loops.insert(make_pair(name,AnimationLoop(name,path,mesh.joints,start_frame,frameTime,vel)));
@@ -78,12 +75,9 @@ class AnimationObject{
             GLuint jtmt = glGetUniformLocation(shader, "jointMatrices");
             glUniformMatrix4fv(jtmt,final_matrix.size(),GL_FALSE,reinterpret_cast<GLfloat *>(final_matrix.data()));
             GLuint Matrixm = glGetUniformLocation(shader, "model");
-            GLuint rev_aff_loc = glGetUniformLocation(shader, "rev_aff");
             auto itr = Loops.find(curr_animation);
             this->Move(deltatime,itr->second.getVelocity());
-            glUniformMatrix4fv(Matrixm, 1, GL_FALSE, aff.matrix().data());
-            glUniformMatrix4fv(rev_aff_loc, 1, GL_FALSE, rev_aff.inverse().matrix().data()); 
-            //cout<<rev_aff.inverse().matrix()*aff.matrix()<<endl;
+            glUniformMatrix4fv(Matrixm, 1, GL_FALSE, model.data());
             mesh.Draw(shader);
         }
 
@@ -109,16 +103,13 @@ class AnimationObject{
             shader = shaderID;
         }
         void Move(float deltatime,Eigen::Vector3f vel){
-            aff.rotate(Eigen::AngleAxis<float>(dir*deltatime*angular_vel*(M_PI/180.0),Eigen::Vector3f(0,0,1)));
-            aff.translate(deltatime*vel);
-            rev_aff.rotate(Eigen::AngleAxis<float>(dir*deltatime*angular_vel*(M_PI/180.0),Eigen::Vector3f(0,0,1)));
-            rev_aff.translate(deltatime*vel);
+            out_model.block<3,1>(0,3) += out_model.block<3,3>(0,0)*(deltatime*vel);
         }
-        void Rotate(int dir){
-            this->dir = dir;
+        void Rotate(float theta){
+            out_model.block<3,3>(0,0) = Eigen::AngleAxis<float>(theta,Eigen::Vector3f(0,1,0)).toRotationMatrix()*out_model.block<3,3>(0,0);
         }
     Camera* fpCamera;
-    Eigen::Affine3f rev_aff;
+    Eigen::Matrix4f out_model = Eigen::Matrix4f::Identity();
     private:
     Mesh mesh;
 
@@ -133,6 +124,7 @@ class AnimationObject{
     float jump_time;
     GLuint shader;
     Eigen::Affine3f aff;
-    float angular_vel =  90;
-    int dir = 0;
+    Eigen::Matrix4f model;
+    float angular_vel =  120;
+    float theta = 0;
 };

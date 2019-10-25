@@ -15,9 +15,10 @@
 
 
 
-
+float sensitivity = 0.001;
 GLuint  prog_hdlr,bone_hdlr;
 unsigned int VBO,lightVAO;
+bool flag=true;
 Camera *camera;
 Camera *tpCamera;
 Mesh mesh;
@@ -29,6 +30,8 @@ GLfloat aspect;
 int frame=0,t1,timebase=0;
 int t2;
 float width=1920,height=1022;
+int prev_x,prev_y;
+bool first_time = true;
 Eigen::Vector3f LightPos(0,10,-10);
 
 void setUnifs(GLuint shaderID){
@@ -54,8 +57,9 @@ void vao_display(){
    
 
    setUnifs(bone_hdlr);
-  GLuint rev_aff_loc = glGetUniformLocation(bone_hdlr, "rev_aff");
-  glUniformMatrix4fv(rev_aff_loc, 1, GL_FALSE, object->rev_aff.inverse().matrix().data()); 
+   GLuint otmod = glGetUniformLocation(bone_hdlr, "out_model");
+   Eigen::Matrix4f out_inv = object->out_model.inverse();
+   glUniformMatrix4fv(otmod, 1, GL_FALSE, out_inv.data());
    arena->Draw();
 
 
@@ -74,6 +78,17 @@ void vao_display(){
 
 // --------------- keyboard event function ---------------------------------------
 
+
+void look( int x, int y ){
+  if((x > 0.9*width) || (x< 0.1*width)){
+    glutWarpPointer(width/2, height/2); /* could also use SetCursorPos() if you're only going to use Windows */
+    prev_x = width/2;
+  }else{
+    int deltaX = x - prev_x;
+    object->Rotate(-deltaX*sensitivity);
+    prev_x = x;
+  }
+}
 
 void keyUp(unsigned char key, int x, int y){
   if(('w' == key) || ('s' == key)){
@@ -113,16 +128,16 @@ void simpleKeyboard(unsigned char key, int x, int y)
     object->setAnimation("BACK");
   }
   if('a' == key){
-    object->Rotate(1);
+    object->setAnimation("SIDE");
   }
   if('d' == key){
-    object->Rotate(-1);
+    //object->Rotate(-1);
   }
   if(32 == key){
     object->setAnimation("JUMP");
   }
   if('x' == key){
-    object->setAnimation("SIDE");
+    object->setAnimation("RECOIL");
   }
   if('k' == key){
     cout<<camera->getEyePosition();
@@ -229,7 +244,8 @@ int main(int argc, char** argv) {
     glutSpecialFunc(specialKeyFunction);
     glutKeyboardFunc(simpleKeyboard);
     glutKeyboardUpFunc(keyUp);
-
+    glutPassiveMotionFunc(look);
+    glutSetCursor(GLUT_CURSOR_NONE);
 	 glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
@@ -322,12 +338,12 @@ int main(int argc, char** argv) {
     arena = new ArenaObject("ARENA","../csgo/arena.dae");
     arena->setShader(bone_hdlr);
     object->addAnimation("REST","out_running.txt",0,0.15,Eigen::Vector3f(0,0,0));
-    object->addAnimation("RUN","out_running.txt",1,0.15,Eigen::Vector3f(0,14,0));
+    object->addAnimation("RUN","out_running.txt",1,0.15,Eigen::Vector3f(0,0,-14));
     object->addAnimation("RECOIL","out_recoil.txt",0,0.15,Eigen::Vector3f(0,0,0));
-    object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,9,0));
-    object->addAnimation("SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(9,0,0));
-    object->addAnimation("JUMP","out_jump.txt",0,0.15,Eigen::Vector3f(0,14,0));
-    object->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,-9,0));
+    object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-14));
+    object->addAnimation("SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(14,0,0));
+    object->addAnimation("JUMP","out_jump.txt",0,0.15,Eigen::Vector3f(0,0,-14));
+    object->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,0,9));
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);

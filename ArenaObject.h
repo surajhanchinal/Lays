@@ -19,9 +19,8 @@ class ArenaObject{
             mesh = parser.getMesh();
             mesh.SetupMesh();
             
-            Eigen::Affine3f aff = Eigen::Affine3f::Identity();
-            aff.prerotate(Eigen::AngleAxis<float>(-M_PI/2,Eigen::Vector3f(1,0,0)));
-            model = aff.matrix();
+            model = Eigen::Matrix4f::Identity();
+            model.block<3,3>(0,0) = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()).toRotationMatrix();
         }
         void setShader(GLuint shaderID)
         {
