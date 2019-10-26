@@ -7,7 +7,7 @@ uniform vec3 LightPos;
 void main()
 {
     // ambient
-    float ambient = 0.1;
+    float ambient = 0.4;
   	
     // diffuse 
     vec3 norm = normalize(Normal);

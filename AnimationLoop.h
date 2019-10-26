@@ -50,7 +50,7 @@ public:
     }
 
     vector<Eigen::Matrix4f> updateAnimation(float deltatime){
-        if(!name.compare("REST") or !name.compare("JUMP")){
+        if(!name.compare("REST") or !name.compare("JUMP") or !name.compare("HUD")){
             return KeyFrames[0];
         }
         time += deltatime;

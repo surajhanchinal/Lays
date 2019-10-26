@@ -16,7 +16,7 @@
 
 
 float sensitivity = 0.001;
-GLuint  prog_hdlr,bone_hdlr;
+GLuint  prog_hdlr,bone_hdlr,cross_hdlr;
 unsigned int VBO,lightVAO;
 bool flag=true;
 Camera *camera;
@@ -32,7 +32,53 @@ int t2;
 float width=1920,height=1022;
 int prev_x,prev_y;
 bool first_time = true;
-Eigen::Vector3f LightPos(0,10,-10);
+char current_click = ' ';
+
+Eigen::Vector3f LightPos(0,30,-10);
+
+void drawCrossHair(){
+  float length = 2;
+  float length2 = 0.5;
+  float offset = 0.008;
+  float scale = 0.005;
+  glUseProgram(cross_hdlr);
+    GLuint Matrixp = glGetUniformLocation(cross_hdlr, "projection");
+    GLuint Matrixm = glGetUniformLocation(cross_hdlr, "model");
+    Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
+    glUniformMatrix4fv(Matrixp, 1, GL_FALSE, camera->getProjectionMatrix().data());    
+    m << scale*length2,0,0,0,
+         0,scale*length,0,offset,
+         0,0,scale,-0.5,
+         0,0,0,1;
+    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES,0,36);
+
+    m << scale*length2,0,0,0,
+         0,scale*length,0,-offset,
+         0,0,scale,-0.5,
+         0,0,0,1;
+    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES,0,36);
+
+    m << scale*length,0,0,offset,
+         0,scale*length2,0,0,
+         0,0,scale,-0.5,
+         0,0,0,1;
+    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES,0,36);
+
+    m << scale*length,0,0,-offset,
+         0,scale*length2,0,0,
+         0,0,scale,-0.5,
+         0,0,0,1;
+    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES,0,36);
+}
+
 
 void setUnifs(GLuint shaderID){
    glUseProgram(shaderID);
@@ -61,7 +107,8 @@ void vao_display(){
    Eigen::Matrix4f out_inv = object->out_model.inverse();
    glUniformMatrix4fv(otmod, 1, GL_FALSE, out_inv.data());
    arena->Draw();
-
+    
+   drawCrossHair();
 
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
@@ -78,6 +125,17 @@ void vao_display(){
 
 // --------------- keyboard event function ---------------------------------------
 
+void click(int button,int state,int x,int y){
+  if(button == GLUT_LEFT_BUTTON){
+    if(state == GLUT_UP){
+      object->setAnimation("REST");
+    }
+    if(state == GLUT_DOWN){
+      object->setAnimation("RECOIL");
+    }
+  }
+}
+
 
 void look( int x, int y ){
   if((x > 0.9*width) || (x< 0.1*width)){
@@ -91,47 +149,53 @@ void look( int x, int y ){
 }
 
 void keyUp(unsigned char key, int x, int y){
-  if(('w' == key) || ('s' == key)){
+  if(current_click == key){
+    if(('w' == key) || ('s' == key)){
     object->setAnimation("REST");
   }
-  if(('a' == key) || ('d' == key)){
-  object->Rotate(0);
+  if(('a' == key) || ('d' == key) || (32 == key)){
+  object->setAnimation("REST");
   }
+  }
+  
+  
 }
 
 
 void simpleKeyboard(unsigned char key, int x, int y)
 {
+
+  current_click = key;
   if('8' == key){
-	  camera->translateCamera(-0.4,0,0);
+	  camera->moveCamera(-0.4,0,0);
   }
   if('5' == key){
-    camera->translateCamera(0.4,0,0);
+    camera->moveCamera(0.4,0,0);
   }
   if('7' == key){
-    camera->translateCamera(0,0,-0.4);
+    camera->moveCamera(0,0,-0.4);
   }
   if('1' == key){
-    camera->translateCamera(0,0,0.4);
+    camera->moveCamera(0,0,0.4);
   }
   if('4' == key){
-    camera->translateCamera(0,0.4,0);
+    camera->moveCamera(0,0.4,0);
   }
   if('6' == key){
-    camera->translateCamera(0,-0.4,0);
+    camera->moveCamera(0,-0.4,0);
   }
 
   if('w' == key){
-    object->setAnimation("WALK");
+    object->setAnimation("RUN");
   }
   if('s' == key){
     object->setAnimation("BACK");
   }
   if('a' == key){
-    object->setAnimation("SIDE");
+    object->setAnimation("RIGHT_SIDE");
   }
   if('d' == key){
-    //object->Rotate(-1);
+    object->setAnimation("LEFT_SIDE");
   }
   if(32 == key){
     object->setAnimation("JUMP");
@@ -234,7 +298,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
     glutInitWindowSize(1920,1080); 
-    glutInitWindowPosition(100,100);
+    glutInitWindowPosition(0,0);
     
     glutCreateWindow("ARROW KEYS ROTATE THE TEAPOTS; HOME KEY RESETS");
 
@@ -245,8 +309,10 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(simpleKeyboard);
     glutKeyboardUpFunc(keyUp);
     glutPassiveMotionFunc(look);
+    glutMotionFunc(look);
+    glutMouseFunc(click);
     glutSetCursor(GLUT_CURSOR_NONE);
-	 glEnable(GL_DEPTH_TEST);
+	  glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
     #if USE_SHADERS
@@ -259,6 +325,7 @@ int main(int argc, char** argv) {
 	}
 	setShaders(prog_hdlr, "shaders/vert.glsl", "shaders/frag.glsl");
   setShaders(bone_hdlr, "shaders/light_vert.glsl", "shaders/light_frag.glsl");
+  setShaders(cross_hdlr, "shaders/cross_vert.glsl", "shaders/cross_frag.glsl");
 #endif
 
    float vertices[] = {
@@ -338,12 +405,13 @@ int main(int argc, char** argv) {
     arena = new ArenaObject("ARENA","../csgo/arena.dae");
     arena->setShader(bone_hdlr);
     object->addAnimation("REST","out_running.txt",0,0.15,Eigen::Vector3f(0,0,0));
-    object->addAnimation("RUN","out_running.txt",1,0.15,Eigen::Vector3f(0,0,-14));
-    object->addAnimation("RECOIL","out_recoil.txt",0,0.15,Eigen::Vector3f(0,0,0));
-    object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-14));
-    object->addAnimation("SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(14,0,0));
+    object->addAnimation("RUN","out_running.txt",1,0.15,Eigen::Vector3f(0,0,-50));
+    object->addAnimation("RECOIL","out_recoil.txt",0,0.05,Eigen::Vector3f(0,0,0));
+    object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-50));
+    object->addAnimation("LEFT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(25,0,0));
+    object->addAnimation("RIGHT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(-25,0,0));
     object->addAnimation("JUMP","out_jump.txt",0,0.15,Eigen::Vector3f(0,0,-14));
-    object->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,0,9));
+    object->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,0,25));
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);

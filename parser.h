@@ -189,8 +189,9 @@ Mesh MakeTriangles(){
     color_map.insert(make_pair("Shirt-material",Eigen::Vector3f(0.8,0.024,0.024)));
     color_map.insert(make_pair("Pant-material",Eigen::Vector3f(0.004,0.019,0.095)));
     color_map.insert(make_pair("Eyebrow-material",Eigen::Vector3f(0.007,0.004,0.003)));
-    color_map.insert(make_pair("wall-material",Eigen::Vector3f(0.012,0.044,0.342)));
-    color_map.insert(make_pair("floor-material",Eigen::Vector3f(0.8,0.044,0.007)));
+    color_map.insert(make_pair("wall-material",Eigen::Vector3f(0.078,0.143,0.342)));
+    color_map.insert(make_pair("floor-material",Eigen::Vector3f(0.5,0.5,0.6)));
+    color_map.insert(make_pair("sky-material",Eigen::Vector3f(0.243,0.732,0.8)));
     rapidxml::file<> xmlFile(path.c_str());
     rapidxml::xml_document<> doc;
     doc.parse<0>(xmlFile.data());    // 0 means default parse flags

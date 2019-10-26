@@ -18,10 +18,10 @@ class AnimationObject{
             Parser parser(MeshPath);
             mesh = parser.parseMesh();
             mesh.SetupMesh();
-            fpCamera = new Camera(Eigen::Vector3f(1.34277,11.0314+2,-0.18954-5),Eigen::Vector3f(0,1,0),45,1920.0f/1022.0f,0.1f,1000.0f,-0.1,1.278);
+            fpCamera = new Camera(Eigen::Vector3f(1.47,10.7515+4,0.1949),Eigen::Vector3f(0,1,0),45,1920.0f/1022.0f,0.1f,1000.0f,0,1.278);
             model = Eigen::Matrix4f::Identity();
             model.block<3,3>(0,0) = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()).toRotationMatrix();
-            model.block<3,1>(0,3) = Eigen::Vector3f(0,2,-5);
+            model.block<3,1>(0,3) = Eigen::Vector3f(0,4,0);
         }
         void addAnimation(string name,string path,int start_frame,float frameTime,Eigen::Vector3f vel){
             Loops.insert(make_pair(name,AnimationLoop(name,path,mesh.joints,start_frame,frameTime,vel)));
