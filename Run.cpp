@@ -11,12 +11,13 @@
 #include "AnimationObject.h"
 #include "ArenaObject.h"
 #include <ncurses.h>
+#include "textureManager.h"
 #define USE_SHADERS 1
 
 
 
 float sensitivity = 0.001;
-GLuint  prog_hdlr,bone_hdlr,cross_hdlr;
+GLuint  prog_hdlr,bone_hdlr,cross_hdlr,bullet_hdlr;
 unsigned int VBO,lightVAO;
 bool flag=true;
 Camera *camera;
@@ -25,6 +26,7 @@ Mesh mesh;
 Parser *parser;
 AnimationObject *object;
 ArenaObject *arena;
+TextureManager texer;
 float deltaTime=0;
 GLfloat aspect;
 int frame=0,t1,timebase=0;
@@ -103,17 +105,54 @@ void vao_display(){
    
 
    setUnifs(bone_hdlr);
-   GLuint otmod = glGetUniformLocation(bone_hdlr, "out_model");
-   Eigen::Matrix4f out_inv = object->out_model.inverse();
-   glUniformMatrix4fv(otmod, 1, GL_FALSE, out_inv.data());
-   arena->Draw();
+   arena->Draw(object->out_model.inverse());
     
+    /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
+     GLuint Matrixp = glGetUniformLocation(bone_hdlr, "projection");
+    GLuint Matrixm = glGetUniformLocation(bone_hdlr, "model");
+    Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
+    glUniformMatrix4fv(Matrixp, 1, GL_FALSE, camera->getProjectionMatrix().data());    
+    m << 8,0,0,0,
+         0,14,0,7,
+         0,0,8,0,
+         0,0,0,1;
+    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+    glBindVertexArray(lightVAO);
+
+    glDrawArrays(GL_TRIANGLES,0,36);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);*/
+
+    glUseProgram(bullet_hdlr);
+    setUnifs(bullet_hdlr);
+    GLuint bMatrixm = glGetUniformLocation(bullet_hdlr, "model");
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(bullet_hdlr, "texture1"), 0);
+    glBindTexture(bullet_hdlr,texer.getTextureID("bullet"));
+    Eigen::Vector3f intersectionPoint;
+    Eigen::Vector3f intersectionNormal;  
+    bool out = object->RayCast(intersectionPoint,intersectionNormal);
+    GLuint sha_color = glGetUniformLocation(bullet_hdlr, "color");
+    Eigen::Vector3f hit_color = Eigen::Vector3f(1,0,0);
+    glUniform3fv(sha_color,1,hit_color.data());
+    if(out){
+      Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
+      Eigen::Vector4f i2 = Eigen::Vector4f(intersectionPoint[0],intersectionPoint[1],intersectionPoint[2],1);
+      m=2*m;
+      m.block<4,1>(0,3) = i2;
+      m = object->out_model.inverse()*m;
+      glUniformMatrix4fv(bMatrixm, 1, GL_FALSE, m.data());
+      glBindVertexArray(lightVAO);
+      glDrawArrays(GL_TRIANGLES,6,6);
+    }
+
    drawCrossHair();
+
 
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
    if(t1-timebase > 1000){   
-     std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }
@@ -201,11 +240,13 @@ void simpleKeyboard(unsigned char key, int x, int y)
     object->setAnimation("JUMP");
   }
   if('x' == key){
-    object->setAnimation("RECOIL");
+    //object->setAnimation("RECOIL");
+    cout<<endl<<object->fpCamera->getViewMatrix()<<endl;
   }
   if('k' == key){
-    cout<<camera->getEyePosition();
-    cout<<camera->phi<<"  "<<camera->theta<<endl;
+    //cout<<camera->getEyePosition();
+    //cout<<camera->phi<<"  "<<camera->theta<<endl;
+    cout<<"Position:  "<<object->getPosition()<<endl;
   }
   if('g' == key){
     camera = tpCamera;
@@ -314,7 +355,8 @@ int main(int argc, char** argv) {
     glutSetCursor(GLUT_CURSOR_NONE);
 	  glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     #if USE_SHADERS
 	glewInit();
 	if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader && GL_EXT_geometry_shader4)
@@ -326,6 +368,7 @@ int main(int argc, char** argv) {
 	setShaders(prog_hdlr, "shaders/vert.glsl", "shaders/frag.glsl");
   setShaders(bone_hdlr, "shaders/light_vert.glsl", "shaders/light_frag.glsl");
   setShaders(cross_hdlr, "shaders/cross_vert.glsl", "shaders/cross_frag.glsl");
+  setShaders(bullet_hdlr, "shaders/bullet_vert.glsl", "shaders/bullet_frag.glsl");
 #endif
 
    float vertices[] = {
@@ -398,6 +441,10 @@ int main(int argc, char** argv) {
     // note that we update the lamp's position attribute's stride to reflect the updated buffer data
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindVertexArray(0);
 
@@ -410,10 +457,12 @@ int main(int argc, char** argv) {
     object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-50));
     object->addAnimation("LEFT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(25,0,0));
     object->addAnimation("RIGHT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(-25,0,0));
-    object->addAnimation("JUMP","out_jump.txt",0,0.15,Eigen::Vector3f(0,0,-14));
+    object->addAnimation("JUMP","out_jump2.txt",0,0.15,Eigen::Vector3f(0,0,-14));
     object->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,0,25));
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
+    object->setArena(arena);
+    texer.TextureFromFile("./bullet_hole.png","bullet");
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);
     camera = object->fpCamera;
     //cout<<camera->getProjectionMatrix()<<endl;

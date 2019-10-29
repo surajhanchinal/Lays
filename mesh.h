@@ -63,7 +63,7 @@ class Mesh{
 
     void Draw(GLuint ShaderID){
         for(int i=0;i<VAOs.size();i++){
-            if((materials[i].name == "Shirt-material") ||(materials[i].name == "Pant-material") ||(materials[i].name == "Shoe-material")){
+            if((materials[i].name == "Shirt-material") ||(materials[i].name == "Pant-material") ||(materials[i].name == "Shoe-material") ||(materials[i].name == "Face-material") ||(materials[i].name == "Hair-material")){
                 continue;
             }
             GLuint color = glGetUniformLocation(ShaderID, "color");
