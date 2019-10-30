@@ -9,6 +9,7 @@
 #include "AnimationLoop.h"
 #include "camera.h"
 #include "ArenaObject.h"
+#include "Bullet.h"
 using namespace std;
 
 class AnimationObject{
@@ -129,8 +130,8 @@ class AnimationObject{
         }
         void MoveDisplacement(Eigen::Vector3f displ){
             out_model.block<3,1>(0,3) += out_model.block<3,3>(0,0)*(displ);
-            if(out_model(1,3) < 0){
-                out_model(1,3) = 0;
+            if(out_model(2,3) < 6){
+                out_model(2,3) = 6;
             }
         }
         void Rotate(float deltheta){
@@ -285,8 +286,53 @@ class AnimationObject{
         return out;
     }
 
+    void startFire(){
+        firing = true;
+    }
 
+    void Fire(float deltatime){
+        if(firing){
+        if(bulletTime >= (1.0f/bps)*bno){
+            putBullet();
+            bno += 1;
+            if(bno == bps){
+                bno = 0;
+                bulletTime -= 1;
+            }
+        }
+        bulletTime += deltatime;
+        }
+        else{
+            bno=0;
+            bulletTime = 0;
+        }
+    }
+    void stopFire(){
+        firing = false;
+    }
 
+    void initBullets(int poolCount,GLuint shader,GLuint vao,GLuint bulletID,int bps){
+        this->poolCount = poolCount;
+        for(int i=0;i<poolCount;i++){
+            Bullet bullet(vao,shader,bulletID);
+            bullets.push_back(bullet);
+        }
+    }
+    void putBullet(){
+        Eigen::Vector3f pos;
+        Eigen::Vector3f nor;
+        bool out = RayCast(pos,nor);
+        if(out){
+            bullets[bullet_idx].setPosition(pos,nor);
+            bullet_idx = (bullet_idx+1)%this->poolCount;
+        }
+    }
+
+    void DrawBullets(){
+        for(int i=0;i<poolCount;i++){
+            bullets[i].Draw(this->out_model);
+        }
+    }
 
     
     Camera* fpCamera;
@@ -311,5 +357,12 @@ class AnimationObject{
     float acc = -9.8;
     float real_acc = -5;
     float height = 1;
+    vector<Bullet> bullets;
+    int bullet_idx = 0;
+    int poolCount;
+    int bps;
+    int bno = 0;
+    bool firing = false;
+    float bulletTime = 0;
     Eigen::Vector3f jumpVelocity = Eigen::Vector3f(0,sqrt(-2*acc*height),0);
 };

@@ -12,6 +12,7 @@
 #include "ArenaObject.h"
 #include <ncurses.h>
 #include "textureManager.h"
+#include "Bullet.h"
 #define USE_SHADERS 1
 
 
@@ -102,7 +103,7 @@ void vao_display(){
    t2 = glutGet(GLUT_ELAPSED_TIME);
    setUnifs(prog_hdlr);
    object->updateAnimation(deltaTime);
-   
+   object->Fire(deltaTime);
 
    setUnifs(bone_hdlr);
    arena->Draw(object->out_model.inverse());
@@ -122,37 +123,15 @@ void vao_display(){
 
     glDrawArrays(GL_TRIANGLES,0,36);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);*/
-
-    glUseProgram(bullet_hdlr);
     setUnifs(bullet_hdlr);
-    GLuint bMatrixm = glGetUniformLocation(bullet_hdlr, "model");
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(glGetUniformLocation(bullet_hdlr, "texture1"), 0);
-    glBindTexture(bullet_hdlr,texer.getTextureID("bullet"));
-    Eigen::Vector3f intersectionPoint;
-    Eigen::Vector3f intersectionNormal;  
-    bool out = object->RayCast(intersectionPoint,intersectionNormal);
-    GLuint sha_color = glGetUniformLocation(bullet_hdlr, "color");
-    Eigen::Vector3f hit_color = Eigen::Vector3f(1,0,0);
-    glUniform3fv(sha_color,1,hit_color.data());
-    if(out){
-      Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
-      Eigen::Vector4f i2 = Eigen::Vector4f(intersectionPoint[0],intersectionPoint[1],intersectionPoint[2],1);
-      m=2*m;
-      m.block<4,1>(0,3) = i2;
-      m = object->out_model.inverse()*m;
-      glUniformMatrix4fv(bMatrixm, 1, GL_FALSE, m.data());
-      glBindVertexArray(lightVAO);
-      glDrawArrays(GL_TRIANGLES,6,6);
-    }
-
+    object->DrawBullets();
    drawCrossHair();
 
 
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
    if(t1-timebase > 1000){   
-    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+    //std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }
@@ -168,9 +147,13 @@ void click(int button,int state,int x,int y){
   if(button == GLUT_LEFT_BUTTON){
     if(state == GLUT_UP){
       object->setAnimation("REST");
+      object->stopFire();
+      cout<<"release"<<endl;
     }
     if(state == GLUT_DOWN){
       object->setAnimation("RECOIL");
+      object->startFire();
+      cout<<"catch"<<endl;
     }
   }
 }
@@ -241,7 +224,8 @@ void simpleKeyboard(unsigned char key, int x, int y)
   }
   if('x' == key){
     //object->setAnimation("RECOIL");
-    cout<<endl<<object->fpCamera->getViewMatrix()<<endl;
+    //cout<<endl<<object->fpCamera->getViewMatrix()<<endl;
+    object->putBullet();
   }
   if('k' == key){
     //cout<<camera->getEyePosition();
@@ -412,7 +396,15 @@ int main(int argc, char** argv) {
          0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,0.0f,
          0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,0.0f,
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f,0.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f,0.0f,
+
+        -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,0.0f,
+         0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f,0.0f,
+         0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,0.0f,
+         0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,0.0f,
+        -0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f,0.0f,
+        -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,0.0f
+
     };
 
 
@@ -463,6 +455,7 @@ int main(int argc, char** argv) {
     object->setAnimation("REST");
     object->setArena(arena);
     texer.TextureFromFile("./bullet_hole.png","bullet");
+    object->initBullets(30,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),4);
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);
     camera = object->fpCamera;
     //cout<<camera->getProjectionMatrix()<<endl;
