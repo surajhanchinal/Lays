@@ -38,7 +38,6 @@ class AnimationObject{
                     return;
                 }
 
-                if(name.compare(curr_animation)){
                     if(name.compare(next_animation)){
                         next_animation = name;
                         auto itr = Loops.find(curr_animation);
@@ -48,7 +47,6 @@ class AnimationObject{
                         transition_matrix = lerp_matrix;
                         in_transition = true;
                     }
-                }
             }
         }
         void updateAnimation(float deltatime){
@@ -115,7 +113,7 @@ class AnimationObject{
         }
         void Move(float deltatime,Eigen::Vector3f vel){
             Eigen::Vector3i stop = checkCollision(arena);
-            Eigen::Vector3f rot_disp = out_model.block<3,3>(0,0)*(deltatime*vel);
+            Eigen::Vector3f rot_disp = Eigen::AngleAxis<float>(theta_x,Eigen::Vector3f(0,1,0)).toRotationMatrix()*(deltatime*vel);
             for(int i=0;i<3;i++){
                 if(stop[i] == 1){
                     float val = rot_disp[i];
@@ -129,14 +127,18 @@ class AnimationObject{
             out_model.block<3,1>(0,3) += rot_disp;
         }
         void MoveDisplacement(Eigen::Vector3f displ){
-            out_model.block<3,1>(0,3) += out_model.block<3,3>(0,0)*(displ);
-            if(out_model(2,3) < 6){
-                out_model(2,3) = 6;
+            out_model.block<3,1>(0,3) += Eigen::AngleAxis<float>(theta_x,Eigen::Vector3f(0,1,0)).toRotationMatrix()*(displ);
+            if(out_model(1,3) < 6){
+                out_model(1,3) = 6;
             }
         }
-        void Rotate(float deltheta){
-            theta += deltheta;
-            out_model.block<3,3>(0,0) = Eigen::AngleAxis<float>(theta,Eigen::Vector3f(0,1,0)).toRotationMatrix();//*out_model.block<3,3>(0,0);
+        void Rotate(float deltheta_x,float deltheta_y){
+            theta_x += deltheta_x;
+            theta_y += deltheta_y;
+            if(abs(theta_y) > M_PI/6.0f){
+                theta_y = (abs(theta_y)/theta_y)*(M_PI/6.0f);
+            }
+            out_model.block<3,3>(0,0) = (Eigen::AngleAxis<float>(theta_x,Eigen::Vector3f(0,1,0))*Eigen::AngleAxis<float>(theta_y,Eigen::Vector3f(1,0,0))).toRotationMatrix();//*out_model.block<3,3>(0,0);
         }
 
     Eigen::Vector3f getPosition(){
@@ -313,6 +315,7 @@ class AnimationObject{
 
     void initBullets(int poolCount,GLuint shader,GLuint vao,GLuint bulletID,int bps){
         this->poolCount = poolCount;
+        this->bps = bps;
         for(int i=0;i<poolCount;i++){
             Bullet bullet(vao,shader,bulletID);
             bullets.push_back(bullet);
@@ -353,7 +356,8 @@ class AnimationObject{
     Eigen::Affine3f aff;
     Eigen::Matrix4f model;
     float angular_vel =  120;
-    float theta = 0;
+    float theta_x = 0;
+    float theta_y = 0;
     float acc = -9.8;
     float real_acc = -5;
     float height = 1;

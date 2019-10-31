@@ -160,13 +160,20 @@ void click(int button,int state,int x,int y){
 
 
 void look( int x, int y ){
-  if((x > 0.9*width) || (x< 0.1*width)){
-    glutWarpPointer(width/2, height/2); /* could also use SetCursorPos() if you're only going to use Windows */
+  if((y > 0.8*height) || (y< 0.2*height)){
+    glutWarpPointer(x, height/2);
+    prev_y = height/2;
+  }
+  else if((x > 0.9*width) || (x< 0.1*width)){
+    glutWarpPointer(width/2, y);
     prev_x = width/2;
-  }else{
+  }
+  else{
     int deltaX = x - prev_x;
-    object->Rotate(-deltaX*sensitivity);
+    int deltaY = y - prev_y;
+    object->Rotate(-deltaX*sensitivity,-deltaY*sensitivity);
     prev_x = x;
+    prev_y = y;
   }
 }
 
@@ -447,15 +454,15 @@ int main(int argc, char** argv) {
     object->addAnimation("RUN","out_running.txt",1,0.15,Eigen::Vector3f(0,0,-50));
     object->addAnimation("RECOIL","out_recoil.txt",0,0.05,Eigen::Vector3f(0,0,0));
     object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-50));
-    object->addAnimation("LEFT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(25,0,0));
-    object->addAnimation("RIGHT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(-25,0,0));
+    object->addAnimation("LEFT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(40,0,0));
+    object->addAnimation("RIGHT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(-40,0,0));
     object->addAnimation("JUMP","out_jump2.txt",0,0.15,Eigen::Vector3f(0,0,-14));
     object->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,0,25));
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
     object->setArena(arena);
-    texer.TextureFromFile("./bullet_hole.png","bullet");
-    object->initBullets(30,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),4);
+    texer.TextureFromFile("./bullet_hole2.png","bullet");
+    object->initBullets(30,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),10);
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);
     camera = object->fpCamera;
     //cout<<camera->getProjectionMatrix()<<endl;

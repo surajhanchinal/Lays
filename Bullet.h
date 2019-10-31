@@ -33,13 +33,19 @@ public:
             m = out_model.inverse()*m;
             if(abs(Normal.x()) == 1){
                 Eigen::Matrix4f rot = Eigen::Matrix4f::Identity();
-                rot.block<3,1>(0,3) = Normal.x()*Eigen::Vector3f(0.01,0,0);
+                rot.block<3,1>(0,3) = Normal.x()*Eigen::Vector3f(0.03,0,0);
                 rot.block<3,3>(0,0) = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitY()).toRotationMatrix();
+                m = m*rot;
+            }
+            else if(abs(Normal.y()) == 1){
+                Eigen::Matrix4f rot = Eigen::Matrix4f::Identity();
+                rot.block<3,1>(0,3) = Normal.y()*Eigen::Vector3f(0,0.03,0);
+                rot.block<3,3>(0,0) = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()).toRotationMatrix();
                 m = m*rot;
             }
             else if(abs(Normal.z()) == 1){
                 Eigen::Matrix4f rot = Eigen::Matrix4f::Identity();
-                rot.block<3,1>(0,3) = Normal.z()*Eigen::Vector3f(0,0,0.01);
+                rot.block<3,1>(0,3) = Normal.z()*Eigen::Vector3f(0,0,0.03);
                 m = m*rot;
             }
             glUniformMatrix4fv(bMatrixm, 1, GL_FALSE, m.data());
