@@ -168,25 +168,29 @@ class AnimationObject{
             float my_min_x = position[0] - 3;
             float my_max_z = position[2] + 3;
             float my_min_z = position[2] - 3;
+            float my_max_y = position[1] + 7;
+            float my_min_y = position[1] - 7;
             Eigen::Vector3f avg_position = (v1.position+v2.position+v3.position)/3.0f;
             Eigen::Vector3f avg_normal = (v1.normal+v2.normal+v3.normal)/3.0f;
             if(abs(avg_normal.dot(Eigen::Vector3f(0,1,0))) == 1){
                 continue;
+                bool is_y_lim = inRange(my_min_y,my_max_y,avg_position.y());
+                if(is_y_lim){
+                    if(avg_normal.sum() > 0){
+                        stop[1] = 1;
+                    }
+                    else
+                    stop[1] = 2;
+                }
             }
             
             if(abs(avg_normal.dot(Eigen::Vector3f(1,0,0))) == 1){
-                //cout<<v1.position.x()<<"  "<<v2.position.x()<<"  "<<v3.position.x()<<endl;
-                //cout<<avg_position<<endl;
-                //cout<<endl;
                 bool is_x_lim = inRange(my_min_x,my_max_x,avg_position.x());
                 bool z_min = inRange(min_z,max_z,my_min_z);
                 bool z_max = inRange(min_z,max_z,my_max_z);
-                //cout<<"x:  "<<is_x_lim<<" "<<z_min<<"  "<<z_max<<endl; 
                 if(is_x_lim && z_min && z_max){
-                    //cout<<"Collision Detected in X"<<endl;
                     if(avg_normal.sum() > 0){
                         stop[0] = 1;
-                        
                     }
                     else
                     stop[0] = 2;
@@ -195,16 +199,12 @@ class AnimationObject{
             }
 
             if(abs(avg_normal.dot(Eigen::Vector3f(0,0,1))) == 1){
-                //cout<<v1.position.z()<<"  "<<v2.position.z()<<"  "<<v3.position.z()<<endl;
                 bool is_z_lim = inRange(my_min_z,my_max_z,avg_position.z());
                 bool x_min = inRange(min_x,max_x,my_min_x);
                 bool x_max = inRange(min_x,max_x,my_max_x);
-                //cout<<avg_position.z()<<" "<<is_z_lim<<endl;
                 if(is_z_lim && x_min && x_max){
-                    //cout<<"Collision Detected in Z"<<endl;
                     if(avg_normal.sum() > 0){
                         stop[2] = 1;
-                        
                     }
                     else
                     stop[2] = 2;

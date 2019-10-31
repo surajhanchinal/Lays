@@ -36,7 +36,7 @@ float width=1920,height=1022;
 int prev_x,prev_y;
 bool first_time = true;
 char current_click = ' ';
-
+int count1 = 0;
 Eigen::Vector3f LightPos(0,30,-10);
 
 void drawCrossHair(){
@@ -130,8 +130,10 @@ void vao_display(){
 
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
-   if(t1-timebase > 1000){   
-    //std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+   if(t1-timebase > 1000){
+    //std::cout<<count1<<endl;
+    count1 = 0;   
+    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }
@@ -160,6 +162,7 @@ void click(int button,int state,int x,int y){
 
 
 void look( int x, int y ){
+  count1++;
   if((y > 0.8*height) || (y< 0.2*height)){
     glutWarpPointer(x, height/2);
     prev_y = height/2;
