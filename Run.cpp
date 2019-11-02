@@ -10,9 +10,10 @@
 #include <eigen3/Eigen/Dense>
 #include "AnimationObject.h"
 #include "ArenaObject.h"
-#include <ncurses.h>
 #include "textureManager.h"
 #include "Bullet.h"
+#include "include/conio.h"
+#include "include/irrKlang.h"
 #define USE_SHADERS 1
 
 
@@ -26,6 +27,7 @@ Camera *tpCamera;
 Mesh mesh;
 Parser *parser;
 AnimationObject *object;
+AnimationObject *object2;
 ArenaObject *arena;
 TextureManager texer;
 float deltaTime=0;
@@ -37,6 +39,8 @@ int prev_x,prev_y;
 bool first_time = true;
 char current_click = ' ';
 int count1 = 0;
+irrklang::ISoundEngine* engine;
+irrklang::ISound* music;
 Eigen::Vector3f LightPos(0,30,-10);
 
 void drawCrossHair(){
@@ -104,7 +108,7 @@ void vao_display(){
    setUnifs(prog_hdlr);
    object->updateAnimation(deltaTime);
    object->Fire(deltaTime);
-
+   object2->updateAnimation(deltaTime,object->out_model.inverse());
    setUnifs(bone_hdlr);
    arena->Draw(object->out_model.inverse());
     
@@ -126,6 +130,10 @@ void vao_display(){
     setUnifs(bullet_hdlr);
     object->DrawBullets();
    drawCrossHair();
+   Eigen::Vector3f dir_vec = Eigen::Vector3f(0,0,1);
+   dir_vec = object->out_model.block<3,3>(0,0)*dir_vec;
+   music->setPosition(irrklang::vec3df(object->out_model(0,3),object->out_model(1,3),object->out_model(2,3)));
+   engine->setListenerPosition(irrklang::vec3df(object->out_model(0,3),object->out_model(1,3),object->out_model(2,3)), irrklang::vec3df(dir_vec[0],dir_vec[1],dir_vec[2]));   
 
 
    t1=glutGet(GLUT_ELAPSED_TIME);
@@ -133,7 +141,7 @@ void vao_display(){
    if(t1-timebase > 1000){
     //std::cout<<count1<<endl;
     count1 = 0;   
-    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+    //std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }
@@ -150,11 +158,13 @@ void click(int button,int state,int x,int y){
     if(state == GLUT_UP){
       object->setAnimation("REST");
       object->stopFire();
+      music->setIsPaused(true);
       cout<<"release"<<endl;
     }
     if(state == GLUT_DOWN){
       object->setAnimation("RECOIL");
       object->startFire();
+      music->setIsPaused(false);
       cout<<"catch"<<endl;
     }
   }
@@ -181,14 +191,15 @@ void look( int x, int y ){
 }
 
 void keyUp(unsigned char key, int x, int y){
-  if(current_click == key){
+  //if(current_click == key){
     if(('w' == key) || ('s' == key)){
+      cout<<"W up"<<endl;
     object->setAnimation("REST");
   }
-  if(('a' == key) || ('d' == key) || (32 == key)){
+  if(('a' == key) || ('d' == key)){
   object->setAnimation("REST");
   }
-  }
+  //}
   
   
 }
@@ -450,11 +461,30 @@ int main(int argc, char** argv) {
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindVertexArray(0);
 
+    engine = irrklang::createIrrKlangDevice();
+    if(!engine)
+    return 0;
+
+    music = engine->play3D("./sounds/bullet.wav",irrklang::vec3df(0,0,0), true, true, true);
+    cout<<"Volume:  "<<music->getVolume()<<endl;
+    //music->setVolume(30);
+    if (music)
+		  music->setMinDistance(3.0f);
+
+    /*while(true){
+    irrklang::vec3df pos3d(0, 0,0);
+    if (music)
+			music->setPosition(pos3d);
+    }*/
+
+    
+
     object = new AnimationObject("MAN","../csgo/bbup_new2.dae");
+    object2 = new AnimationObject("MAN","../csgo/bbup_new2.dae");
     arena = new ArenaObject("ARENA","../csgo/arena.dae");
     arena->setShader(bone_hdlr);
     object->addAnimation("REST","out_running.txt",0,0.15,Eigen::Vector3f(0,0,0));
-    object->addAnimation("RUN","out_running.txt",1,0.15,Eigen::Vector3f(0,0,-50));
+    object->addAnimation("RUN","out_running.txt",1,0.10,Eigen::Vector3f(0,0,-50));
     object->addAnimation("RECOIL","out_recoil.txt",0,0.05,Eigen::Vector3f(0,0,0));
     object->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-50));
     object->addAnimation("LEFT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(40,0,0));
@@ -464,10 +494,25 @@ int main(int argc, char** argv) {
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
     object->setArena(arena);
+
     texer.TextureFromFile("./bullet_hole2.png","bullet");
-    object->initBullets(30,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),10);
+    object->initBullets(100,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),20);
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);
     camera = object->fpCamera;
+    
+    object2->addAnimation("REST","out_running.txt",0,0.15,Eigen::Vector3f(0,0,0));
+    object2->addAnimation("RUN","out_running.txt",1,0.10,Eigen::Vector3f(0,0,-50));
+    object2->addAnimation("RECOIL","out_recoil.txt",0,0.05,Eigen::Vector3f(0,0,0));
+    object2->addAnimation("WALK","out_walking.txt",1,0.15,Eigen::Vector3f(0,0,-50));
+    object2->addAnimation("LEFT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(40,0,0));
+    object2->addAnimation("RIGHT_SIDE","out_sideStep.txt",1,0.5,Eigen::Vector3f(-40,0,0));
+    object2->addAnimation("JUMP","out_jump2.txt",0,0.15,Eigen::Vector3f(0,0,-14));
+    object2->addAnimation("BACK","out_back.txt",1,0.15,Eigen::Vector3f(0,0,25));
+    object2->setShader(prog_hdlr);
+    object2->setAnimation("REST");
+    object2->setArena(arena);
+    object2->initBullets(100,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),20);    
+    object2->setThirdPerson();
     //cout<<camera->getProjectionMatrix()<<endl;
    //cout<<endl;
     //cout<<camera->getViewMatrix()<<endl;

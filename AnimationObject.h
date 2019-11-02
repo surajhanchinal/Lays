@@ -31,6 +31,7 @@ class AnimationObject{
         }
 
         void setAnimation(string name){
+            cout<<name<<"  "<<curr_animation<<"  "<<next_animation<<endl;
             if(!jump_interrupt){
                 if(!name.compare("JUMP")){
                     jump_interrupt = true;
@@ -79,6 +80,43 @@ class AnimationObject{
             auto itr = Loops.find(curr_animation);
             this->Move(deltatime,itr->second.getVelocity());
             glUniformMatrix4fv(Matrixm, 1, GL_FALSE, model.data());
+            mesh.Draw(shader);
+        }
+
+
+        void updateAnimation(float deltatime,Eigen::Matrix4f tpmatrix){
+            if(!jump_interrupt){
+                if(in_transition){
+                    auto itr = Loops.find(next_animation);
+                    bool done = false;
+                    lerp_matrix = itr->second.transition(transition_matrix,deltatime,done);
+                    if(done){
+                        itr->second.resetTransition();
+                        in_transition = false;
+                        curr_animation = next_animation;
+                    }
+                }  
+                else{ 
+                    auto itr = Loops.find(curr_animation);
+                    lerp_matrix = itr->second.updateAnimation(deltatime);
+                }
+            }
+            else if(jump_interrupt){
+                lerp_matrix = jumpHandler(deltatime);
+            }
+            vector<Eigen::Matrix4f> final_matrix;
+            for(int i=0;i<lerp_matrix.size();i++){
+                final_matrix.push_back(lerp_matrix[i]*mesh.invBindMatrices[i]);
+            }
+            GLuint jtmt = glGetUniformLocation(shader, "jointMatrices");
+            glUniformMatrix4fv(jtmt,final_matrix.size(),GL_FALSE,reinterpret_cast<GLfloat *>(final_matrix.data()));
+            GLuint Matrixm = glGetUniformLocation(shader, "model");
+            auto itr = Loops.find(curr_animation);
+            this->Move(deltatime,itr->second.getVelocity());
+            Eigen::Matrix4f model2 = Eigen::Matrix4f::Identity();
+            model2.block<3,1>(0,3) = Eigen::Vector3f(50,6,0);
+            Eigen::Matrix4f new_model = tpmatrix*(model2*model);
+            glUniformMatrix4fv(Matrixm, 1, GL_FALSE, new_model.data());
             mesh.Draw(shader);
         }
 
@@ -337,7 +375,11 @@ class AnimationObject{
         }
     }
 
-    
+    void setThirdPerson(){
+        mesh.thirdPerson = true;
+    }
+
+
     Camera* fpCamera;
     Eigen::Matrix4f out_model = Eigen::Matrix4f::Identity();
     private:

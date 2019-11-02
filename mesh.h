@@ -63,8 +63,10 @@ class Mesh{
 
     void Draw(GLuint ShaderID){
         for(int i=0;i<VAOs.size();i++){
-            if((materials[i].name == "Shirt-material") ||(materials[i].name == "Pant-material") ||(materials[i].name == "Shoe-material") ||(materials[i].name == "Face-material") ||(materials[i].name == "Hair-material")){
-                continue;
+            if(!thirdPerson){
+                if((materials[i].name == "Shirt-material") ||(materials[i].name == "Pant-material") ||(materials[i].name == "Shoe-material") ||(materials[i].name == "Face-material") ||(materials[i].name == "Hair-material")){
+                    continue;
+                }
             }
             GLuint color = glGetUniformLocation(ShaderID, "color");
             glUniform3fv(color, 1, materials[i].color.data());
@@ -74,7 +76,7 @@ class Mesh{
             glBindVertexArray(0);
         }
     }
-    
+    bool thirdPerson = false;
     string name;
     vector<Eigen::Vector3f> positions;
     vector<Eigen::Vector3f> normals;

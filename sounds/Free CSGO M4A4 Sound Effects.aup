@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="Free CSGO M4A4 Sound Effects_data" version="1.3.0" audacityversion="2.1.2" sel0="5.9567471816" sel1="5.9567471816" vpos="0" h="0.0000000000" zoom="70.6761571653" rate="44100.0" snapto="off" selectionformat="seconds" frequencyformat="Hz" bandwidthformat="octaves">
+	<tags/>
+	<wavetrack name="Free CSGO M4A4 Sound Effects" channel="0" linked="1" mute="0" solo="0" height="150" minimized="0" isSelected="0" rate="44100" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="117931">
+				<waveblock start="0">
+					<simpleblockfile filename="e00004e9.au" len="117931" min="-0.60222" max="0.589734" rms="0.196065"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+	<wavetrack name="Free CSGO M4A4 Sound Effects" channel="1" linked="0" mute="0" solo="0" height="150" minimized="0" isSelected="0" rate="44100" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="117931">
+				<waveblock start="0">
+					<simpleblockfile filename="e00008eb.au" len="117931" min="-0.566943" max="0.584595" rms="0.195693"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+</project>
