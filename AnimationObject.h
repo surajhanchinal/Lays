@@ -162,6 +162,7 @@ class AnimationObject{
                     rot_disp[i] = min(0.0f,val);
                 }
             }
+            out_model.block<3,3>(0,0) = (Eigen::AngleAxis<float>(theta_x+recoilAngle_x,Eigen::Vector3f(0,1,0))*Eigen::AngleAxis<float>(theta_y+recoilAngle_y,Eigen::Vector3f(1,0,0))).toRotationMatrix();
             out_model.block<3,1>(0,3) += rot_disp;
         }
         void MoveDisplacement(Eigen::Vector3f displ){
@@ -176,7 +177,6 @@ class AnimationObject{
             if(abs(theta_y) > M_PI/6.0f){
                 theta_y = (abs(theta_y)/theta_y)*(M_PI/6.0f);
             }
-            out_model.block<3,3>(0,0) = (Eigen::AngleAxis<float>(theta_x,Eigen::Vector3f(0,1,0))*Eigen::AngleAxis<float>(theta_y,Eigen::Vector3f(1,0,0))).toRotationMatrix();//*out_model.block<3,3>(0,0);
         }
 
     Eigen::Vector3f getPosition(){
@@ -334,6 +334,11 @@ class AnimationObject{
         if(firing){
         if(bulletTime >= (1.0f/bps)*bno){
             putBullet();
+            bulletsFired += 1;
+            recoilAngle_y += 0.7*(M_PI/180.0f);
+            if(bulletsFired >= 10){
+                recoilAngle_x += 0.7*(M_PI/180.0f);
+            }
             bno += 1;
             if(bno == bps){
                 bno = 0;
@@ -345,6 +350,9 @@ class AnimationObject{
         else{
             bno=0;
             bulletTime = 0;
+            bulletsFired = 0;
+            recoilAngle_y = 0;
+            recoilAngle_x = 0;
         }
     }
     void stopFire(){
@@ -410,5 +418,8 @@ class AnimationObject{
     int bno = 0;
     bool firing = false;
     float bulletTime = 0;
+    float recoilAngle_x = 0;
+    float recoilAngle_y = 0;
+    int bulletsFired = 0;
     Eigen::Vector3f jumpVelocity = Eigen::Vector3f(0,sqrt(-2*acc*height),0);
 };
