@@ -115,7 +115,7 @@ class AnimationObject{
             this->Move(deltatime,itr->second.getVelocity());
             Eigen::Matrix4f model2 = Eigen::Matrix4f::Identity();
             model2.block<3,1>(0,3) = Eigen::Vector3f(50,6,0);
-            Eigen::Matrix4f new_model = tpmatrix*(model2*model);
+            Eigen::Matrix4f new_model = tpmatrix*(out_model*model);
             glUniformMatrix4fv(Matrixm, 1, GL_FALSE, new_model.data());
             mesh.Draw(shader);
         }
@@ -336,8 +336,10 @@ class AnimationObject{
             putBullet();
             bulletsFired += 1;
             recoilAngle_y += 0.7*(M_PI/180.0f);
+            recoilAngle_y = fmod(recoilAngle_y,2*M_PI);
             if(bulletsFired >= 10){
-                recoilAngle_x += 0.7*(M_PI/180.0f);
+                recoilAngle_x += 0.3*(M_PI/180.0f);
+                recoilAngle_x = fmod(recoilAngle_x,2*M_PI);
             }
             bno += 1;
             if(bno == bps){
@@ -351,6 +353,8 @@ class AnimationObject{
             bno=0;
             bulletTime = 0;
             bulletsFired = 0;
+            theta_x += recoilAngle_x;
+            theta_y += recoilAngle_y;
             recoilAngle_y = 0;
             recoilAngle_x = 0;
         }

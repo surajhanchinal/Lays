@@ -14,6 +14,9 @@
 #include "Bullet.h"
 #include "include/conio.h"
 #include "include/irrKlang.h"
+#include <sys/types.h> 
+#include <sys/socket.h>
+#include <netinet/in.h>
 #define USE_SHADERS 1
 
 
@@ -246,12 +249,12 @@ void simpleKeyboard(unsigned char key, int x, int y)
   if('x' == key){
     //object->setAnimation("RECOIL");
     //cout<<endl<<object->fpCamera->getViewMatrix()<<endl;
-    object->putBullet();
+    object2->setAnimation("RUN");
   }
   if('k' == key){
     //cout<<camera->getEyePosition();
     //cout<<camera->phi<<"  "<<camera->theta<<endl;
-    cout<<"Position:  "<<object->getPosition()<<endl;
+    object2->setAnimation("REST");
   }
   if('g' == key){
     camera = tpCamera;
@@ -479,9 +482,9 @@ int main(int argc, char** argv) {
 
     
 
-    object = new AnimationObject("MAN","../csgo/bbup_new2.dae");
-    object2 = new AnimationObject("MAN","../csgo/bbup_new2.dae");
-    arena = new ArenaObject("ARENA","../csgo/arena.dae");
+    object = new AnimationObject("MAN","./assets/bbup_new2.dae");
+    object2 = new AnimationObject("MAN","./assets/bbup_new2.dae");
+    arena = new ArenaObject("ARENA","./assets/arena.dae");
     arena->setShader(bone_hdlr);
     object->addAnimation("REST","out_running.txt",0,0.15,Eigen::Vector3f(0,0,0));
     object->addAnimation("RUN","out_running.txt",1,0.10,Eigen::Vector3f(0,0,-50));
