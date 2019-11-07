@@ -180,6 +180,7 @@ Mesh MakeTriangles(){
     map<string,Eigen::Vector3f> color_map;
     color_map.insert(make_pair("Hair-material",Eigen::Vector3f(0.7,0.7,0.7)));
     color_map.insert(make_pair("Skin-material",Eigen::Vector3f(0.761,0.401,0.205)));
+    color_map.insert(make_pair("Face-material",Eigen::Vector3f(0.761,0.401,0.205)));
     color_map.insert(make_pair("gun_barrel-material",Eigen::Vector3f(0.0,0.0,0.0)));
     color_map.insert(make_pair("gun_main-material",Eigen::Vector3f(0.087,0.004,0.0008)));
     color_map.insert(make_pair("gun_main2-material",Eigen::Vector3f(0.024,0.026,0.027)));

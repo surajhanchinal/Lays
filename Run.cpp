@@ -20,6 +20,12 @@
 #define USE_SHADERS 1
 
 
+float bx = 0;
+float by = 0;
+float bz = 0;
+float sx = 1;
+float sy = 1;
+float sz = 1;
 
 float sensitivity = 0.001;
 GLuint  prog_hdlr,bone_hdlr,cross_hdlr,bullet_hdlr;
@@ -114,22 +120,34 @@ void vao_display(){
    object2->updateAnimation(deltaTime,object->out_model.inverse());
    setUnifs(bone_hdlr);
    arena->Draw(object->out_model.inverse());
-    
-    /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
-     GLuint Matrixp = glGetUniformLocation(bone_hdlr, "projection");
+   //object->transformVertices(); 
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //GLuint Matrixp = glGetUniformLocation(bone_hdlr, "projection");
     GLuint Matrixm = glGetUniformLocation(bone_hdlr, "model");
-    Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
-    glUniformMatrix4fv(Matrixp, 1, GL_FALSE, camera->getProjectionMatrix().data());    
-    m << 8,0,0,0,
-         0,14,0,7,
-         0,0,8,0,
-         0,0,0,1;
-    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
-    glBindVertexArray(lightVAO);
+    
+    //glUniformMatrix4fv(Matrixp, 1, GL_FALSE, camera->getProjectionMatrix().data());    
+    
+     /* for(int i=0;i<object->lerp_matrix.size();i++){
+      if(i!=27){
+        continue;
+      }
+      Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
 
-    glDrawArrays(GL_TRIANGLES,0,36);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);*/
+      m << sx,0,0,0,
+         0,sy,0,bx,
+         0,0,sz,0,
+         0,0,0,1;
+      m << 2.2,0,0,-1.0,
+0,1,0,0.2,
+0,0,0.6,0.0,
+0,0,0,1;
+      m = object->out_model.inverse()*object2->out_model*object2->model*object2->lerp_matrix[i]*m;
+      glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+      glBindVertexArray(lightVAO);
+      glDrawArrays(GL_TRIANGLES,0,36);
+    } */
+    
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     setUnifs(bullet_hdlr);
     object->DrawBullets();
    drawCrossHair();
@@ -144,7 +162,7 @@ void vao_display(){
    if(t1-timebase > 1000){
     //std::cout<<count1<<endl;
     count1 = 0;   
-    //std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }
@@ -249,7 +267,8 @@ void simpleKeyboard(unsigned char key, int x, int y)
   if('x' == key){
     //object->setAnimation("RECOIL");
     //cout<<endl<<object->fpCamera->getViewMatrix()<<endl;
-    object2->setAnimation("RUN");
+    //object2->setAnimation("RUN");
+    //cout<<" "<<sx<<" "<<sy<<" "<<sz<<" "<<bx<<endl;
   }
   if('k' == key){
     //cout<<camera->getEyePosition();
@@ -262,7 +281,30 @@ void simpleKeyboard(unsigned char key, int x, int y)
   if('h' == key){
     camera = object->fpCamera;
   }
-  
+  if('y' == key){
+    sx += 0.1;
+  }
+  if('u' == key){
+    sy += 0.1;
+  }
+  if('i' == key){
+    sz += 0.1;
+  }
+  if('Y' == key){
+    sx -= 0.1;
+  }
+  if('U' == key){
+    sy -= 0.1;
+  }
+  if('I' == key){
+    sz -= 0.1;
+  }
+  if('{' == key){
+    bx += 0.1;
+  }
+  if('}' == key){
+    bx -= 0.1;
+  }
   glutPostRedisplay();
 }
 
@@ -514,8 +556,9 @@ int main(int argc, char** argv) {
     object2->setShader(prog_hdlr);
     object2->setAnimation("REST");
     object2->setArena(arena);
-    object2->initBullets(100,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),20);    
+    object2->initBullets(100,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),13);    
     object2->setThirdPerson();
+    object->initEnemy(object2);
     //cout<<camera->getProjectionMatrix()<<endl;
    //cout<<endl;
     //cout<<camera->getViewMatrix()<<endl;

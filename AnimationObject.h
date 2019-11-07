@@ -25,13 +25,13 @@ class AnimationObject{
             model.block<3,3>(0,0) = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()).toRotationMatrix();
             model.block<3,1>(0,3) = Eigen::Vector3f(0,0,0);
             out_model.block<3,1>(0,3) = Eigen::Vector3f(50,6,0);
+            initHitBoxes();
         }
         void addAnimation(string name,string path,int start_frame,float frameTime,Eigen::Vector3f vel){
             Loops.insert(make_pair(name,AnimationLoop(name,path,mesh.joints,start_frame,frameTime,vel)));
         }
 
         void setAnimation(string name){
-            cout<<name<<"  "<<curr_animation<<"  "<<next_animation<<endl;
             if(!jump_interrupt){
                 if(!name.compare("JUMP")){
                     jump_interrupt = true;
@@ -70,7 +70,7 @@ class AnimationObject{
             else if(jump_interrupt){
                 lerp_matrix = jumpHandler(deltatime);
             }
-            vector<Eigen::Matrix4f> final_matrix;
+            final_matrix.clear();
             for(int i=0;i<lerp_matrix.size();i++){
                 final_matrix.push_back(lerp_matrix[i]*mesh.invBindMatrices[i]);
             }
@@ -104,7 +104,7 @@ class AnimationObject{
             else if(jump_interrupt){
                 lerp_matrix = jumpHandler(deltatime);
             }
-            vector<Eigen::Matrix4f> final_matrix;
+            final_matrix.clear();
             for(int i=0;i<lerp_matrix.size();i++){
                 final_matrix.push_back(lerp_matrix[i]*mesh.invBindMatrices[i]);
             }
@@ -294,7 +294,7 @@ class AnimationObject{
 }
 
 
-    bool RayCast(Eigen::Vector3f& intersectionPoint,Eigen::Vector3f& intersectionNormal){
+    bool RayCast(Eigen::Vector3f& intersectionPoint,Eigen::Vector3f& intersectionNormal,float& t){
     
         Eigen::Vector3f Ray = Eigen::Vector3f(0,0,-1);
         Eigen::Matrix4f new_Camera = Eigen::Matrix4f::Identity();
@@ -311,7 +311,6 @@ class AnimationObject{
                 triangle.push_back(arena->mesh.materials[i].vertices[j].position);
                 triangle.push_back(arena->mesh.materials[i].vertices[j+1].position);
                 triangle.push_back(arena->mesh.materials[i].vertices[j+2].position);
-                float t;
                 bool inter = RayIntersectsTriangle(RayPos,RayDir,triangle,outIntersectionPoint,t);
                 if(inter == true){
                     if(t<mint){
@@ -323,6 +322,43 @@ class AnimationObject{
                 }
             }
         }
+        t = mint;
+        return out;
+    }
+
+    bool enemyRayCast(float& t){
+        Eigen::Vector3f Ray = Eigen::Vector3f(0,0,-1);
+        Eigen::Matrix4f new_Camera = Eigen::Matrix4f::Identity();
+        new_Camera.block<3,1>(0,3) = -fpCamera->getViewMatrix().block<3,1>(0,3);
+        Eigen::Matrix4f ReverseMatrix = out_model*new_Camera;
+        Eigen::Vector3f RayDir = ReverseMatrix.block<3,3>(0,0)*Ray;
+        Eigen::Vector3f RayPos = ReverseMatrix.block<3,1>(0,3);
+        bool out = false;
+        float mint = 10000000;
+        for(int i=0;i<hitIndexs.size();i++){
+            if(enemy->lerp_matrix.size() == 0){
+                return false;
+            }
+            Eigen::Matrix4f trMatrix = enemy->out_model*enemy->model*enemy->lerp_matrix[hitIndexs[i]]*hitBoxes[i];
+            for(int k=0;k<36;k+=3){
+                vector<Eigen::Vector3f> triangle;
+                for(int j=0;j<3;j++){
+                    Eigen::Vector4f pos = Eigen::Vector4f(hitVertices[k+j].x(),hitVertices[k+j].y(),hitVertices[k+j].z(),1);
+                    Eigen::Vector3f new_pos = (trMatrix*pos).head<3>();
+                    triangle.push_back(new_pos);
+                    //cout<<new_pos<<endl<<endl;
+                }
+                Eigen::Vector3f intersectionPoint;
+                bool inter = RayIntersectsTriangle(RayPos,RayDir,triangle,intersectionPoint,t);
+                if(inter){
+                    if(t<mint){
+                        out = true;
+                        mint = t;
+                    }
+                }
+            }
+        }
+        t = mint;
         return out;
     }
 
@@ -374,13 +410,23 @@ class AnimationObject{
     void putBullet(){
         Eigen::Vector3f pos;
         Eigen::Vector3f nor;
-        bool out = RayCast(pos,nor);
+        float t1,t2;
+        bool enemy = enemyRayCast(t1);
+        bool out = RayCast(pos,nor,t2);
+        if(enemy){
+            if(t1 < t2){
+                enemyHitCall();
+                return;
+            }
+        }
         if(out){
             bullets[bullet_idx].setPosition(pos,nor);
             bullet_idx = (bullet_idx+1)%this->poolCount;
         }
     }
-
+    void enemyHitCall(){
+        cout<<"Enemy hit"<<endl;
+    }
     void DrawBullets(){
         for(int i=0;i<poolCount;i++){
             bullets[i].Draw(this->out_model);
@@ -390,15 +436,135 @@ class AnimationObject{
     void setThirdPerson(){
         mesh.thirdPerson = true;
     }
+    void initEnemy(AnimationObject* object){
+        this->enemy = object;
+    }
 
 
+void initHitBoxes(){
+    Eigen::Matrix4f m;    
+    int i=0;
+    //BODY
+    i=0;
+    hitIndexs.push_back(i);
+    m << 3,0,0,0,
+    0,4.5,0,1.5,
+    0,0,1,0,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    //SHIN
+    i=19;
+    hitIndexs.push_back(i);
+    i=24;
+    hitIndexs.push_back(i);
+    m << 0.8,0,0,0,
+    0,3.9,0,1.3,
+    0,0,1.1,0,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    hitBoxes.push_back(m);
+    //THIGH
+    i=18;
+    hitIndexs.push_back(i);
+    i=23;
+    hitIndexs.push_back(i);
+    m << 1,0,0,0,
+    0,3.8,0,2.2,
+    0,0,0.9,0,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    hitBoxes.push_back(m);
+    //FACE
+    i=3;
+    hitIndexs.push_back(i);
+    m << 1.4,0,0,0,
+    0,2.4,0,0.2,
+    0,0,1.3,-0.3,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    //U_ARM
+    i=4;
+    hitIndexs.push_back(i);
+    i=11;
+    hitIndexs.push_back(i);
+    m << 0.7,0,0,0,
+    0,3,0,1.3,
+    0,0,0.7,0,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    hitBoxes.push_back(m);
+    //L_ARM
+    i=5;
+    hitIndexs.push_back(i);
+    i=12;
+    hitIndexs.push_back(i);
+    m << 0.5,0,0,0,
+    0,2.4,0,1,
+    0,0,0.6,0,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    hitBoxes.push_back(m);
+    //SHOE
+    i=20;
+    hitIndexs.push_back(i);
+    i=25;
+    hitIndexs.push_back(i);
+    m << 2.2,0,0,-1.0,
+    0,1,0,0.2,
+    0,0,0.6,0.0,
+    0,0,0,1;
+    hitBoxes.push_back(m);
+    hitBoxes.push_back(m);
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f, -0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f, -0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f,  0.5f));
+    hitVertices.push_back(Eigen::Vector3f(-0.5f,  0.5f, -0.5f));
+}
+    vector<Eigen::Vector3f> hitVertices;
+    vector<Eigen::Matrix4f> hitBoxes;
+    vector<int> hitIndexs;
+    vector<Eigen::Matrix4f> final_matrix;
+    vector<Eigen::Matrix4f> lerp_matrix,transition_matrix;
     Camera* fpCamera;
+    Eigen::Matrix4f model;
     Eigen::Matrix4f out_model = Eigen::Matrix4f::Identity();
     private:
     Mesh mesh;
     ArenaObject* arena;
     string name;
-    vector<Eigen::Matrix4f> lerp_matrix,transition_matrix;
+    AnimationObject *enemy;
     
     map<string,AnimationLoop> Loops;
     string curr_animation="RUN";
@@ -408,7 +574,6 @@ class AnimationObject{
     float jump_time;
     GLuint shader;
     Eigen::Affine3f aff;
-    Eigen::Matrix4f model;
     float angular_vel =  120;
     float theta_x = 0;
     float theta_y = 0;
