@@ -177,7 +177,10 @@ void setUnifs(GLuint shaderID){
 }
 
 void vao_display(){
-   //glViewport(0, 0, 1920, 1022);
+   Eigen::Vector3f dir_vec = Eigen::Vector3f(0,0,1);
+   dir_vec = object->out_model.block<3,3>(0,0)*dir_vec;
+   music->setPosition(irrklang::vec3df(object2->out_model(0,3),object2->out_model(1,3),object2->out_model(2,3)));
+   engine->setListenerPosition(irrklang::vec3df(object->out_model(0,3),object->out_model(1,3),object->out_model(2,3)), irrklang::vec3df(dir_vec[0],dir_vec[1],dir_vec[2]));
    glClearColor(0,0,0,0);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glEnable(GL_TEXTURE_2D);
@@ -221,10 +224,8 @@ void vao_display(){
     setUnifs(bullet_hdlr);
     object->DrawBullets();
    drawCrossHair();
-   Eigen::Vector3f dir_vec = Eigen::Vector3f(0,0,1);
-   dir_vec = object->out_model.block<3,3>(0,0)*dir_vec;
-   music->setPosition(irrklang::vec3df(object->out_model(0,3),object->out_model(1,3),object->out_model(2,3)));
-   engine->setListenerPosition(irrklang::vec3df(object->out_model(0,3),object->out_model(1,3),object->out_model(2,3)), irrklang::vec3df(dir_vec[0],dir_vec[1],dir_vec[2]));   
+   
+     
 
 
    t1=glutGet(GLUT_ELAPSED_TIME);
@@ -596,7 +597,7 @@ int main(int argc, char** argv) {
 
     music = engine->play3D("./sounds/bullet.wav",irrklang::vec3df(0,0,0), true, true, true);
     cout<<"Volume:  "<<music->getVolume()<<endl;
-    //music->setVolume(30);
+    music->setVolume(10);
     if (music)
 		  music->setMinDistance(3.0f);
 

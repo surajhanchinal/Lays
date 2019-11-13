@@ -36,6 +36,7 @@ class AnimationObject{
             if(itr == Loops.end()){
                 return;
             }
+            sent_animation = name;
             if(!jump_interrupt){
                 if(!name.compare("JUMP")){
                     jump_interrupt = true;
@@ -45,7 +46,6 @@ class AnimationObject{
             }
             if(name.compare(next_animation) && name.compare("JUMP")){
                 next_animation = name;
-                sent_animation = name;
                 auto itr = Loops.find(curr_animation);
                 auto next_itr = Loops.find(next_animation);
                 next_itr->second.resetTransition();
@@ -133,11 +133,12 @@ class AnimationObject{
 
             jumpVelocity.y() += acc*deltatime;
             Eigen::Vector3f displacement = jumpVelocity*deltatime;
-            this->MoveDisplacement(20*displacement);
+            this->MoveDisplacement(10*displacement);
             if(progression > 1){
                 progression = 1;
             }
             if(progression < 0){
+                sent_animation = curr_animation;
                 progression = 0;
                 jump_interrupt = false;
                 jump_time = 0;
