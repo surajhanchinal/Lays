@@ -122,7 +122,7 @@ void write_matrix(char* buffer){
   object2->setAnimation(anim);
   std::getline(iss, token, ',');
   int firing = stoi(token);
-  music->setIsPaused(firing);
+  music->setIsPaused(!firing);
   //cout<<anim.size()<<endl;
 }
 
