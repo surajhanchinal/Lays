@@ -94,7 +94,8 @@ void print_matrix(char* lala){
     lala += sprintf(lala,"%f , ",object->out_model(i,3));
   }
   lala += sprintf(lala,"%f , ",object->theta_x);
-  lala += sprintf(lala,"%s  ",object->sent_animation.c_str());
+  lala += sprintf(lala,"%s  ,",object->sent_animation.c_str());
+  lala += sprintf(lala,"  %d  ",object->firing);
 }
 void write_matrix(char* buffer){
   Eigen::Matrix4f ieg;
@@ -119,6 +120,9 @@ void write_matrix(char* buffer){
   string anim = token;
   anim.erase(remove(anim.begin(), anim.end(), ' '), anim.end()); 
   object2->setAnimation(anim);
+  std::getline(iss, token, ',');
+  int firing = stoi(token);
+  music->setIsPaused(firing);
   //cout<<anim.size()<<endl;
 }
 
@@ -264,13 +268,13 @@ void click(int button,int state,int x,int y){
     if(state == GLUT_UP){
       object->setAnimation("REST");
       object->stopFire();
-      music->setIsPaused(true);
+      //music->setIsPaused(true);
       cout<<"release"<<endl;
     }
     if(state == GLUT_DOWN){
       object->setAnimation("RECOIL");
       object->startFire();
-      music->setIsPaused(false);
+      //music->setIsPaused(false);
       cout<<"catch"<<endl;
     }
   }

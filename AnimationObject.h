@@ -378,12 +378,25 @@ class AnimationObject{
         if(bulletTime >= (1.0f/bps)*bno){
             putBullet();
             bulletsFired += 1;
-            recoilAngle_y += 0.7*(M_PI/180.0f);
-            recoilAngle_y = fmod(recoilAngle_y,2*M_PI);
-            if(bulletsFired >= 10){
-                recoilAngle_x += 0.3*(M_PI/180.0f);
-                recoilAngle_x = fmod(recoilAngle_x,2*M_PI);
+            if(bulletsFired < 10){
+            recoilAngle_y += 0.7*(M_PI/180.0f);                
             }
+            if(inRange(10,18,bulletsFired)){
+                recoilAngle_x += 0.3*(M_PI/180.0f);
+                recoilAngle_y += 0.3*(M_PI/180.0f);
+            }
+            if(inRange(18,26,bulletsFired)){
+                recoilAngle_x -= 0.3*(M_PI/180.0f);
+                //recoilAngle_y -= 0.3*(M_PI/180.0f);
+            }
+            if(bulletsFired >= 26){
+                bulletsFired = 10;
+            }
+
+
+            recoilAngle_y = fmod(recoilAngle_y,2*M_PI);
+            recoilAngle_x = fmod(recoilAngle_x,2*M_PI);
+
             bno += 1;
             if(bno == bps){
                 bno = 0;
@@ -571,6 +584,7 @@ void initHitBoxes(){
     float theta_y = 0;
     string curr_animation="RUN";
     string sent_animation= "RUN";
+    bool firing = false;
     private:
     Mesh mesh;
     ArenaObject* arena;
@@ -594,7 +608,7 @@ void initHitBoxes(){
     int poolCount;
     int bps;
     int bno = 0;
-    bool firing = false;
+    
     float bulletTime = 0;
     float recoilAngle_x = 0;
     float recoilAngle_y = 0;
