@@ -95,7 +95,8 @@ void print_matrix(char* lala){
   }
   lala += sprintf(lala,"%f , ",object->theta_x);
   lala += sprintf(lala,"%s  ,",object->sent_animation.c_str());
-  lala += sprintf(lala,"  %d  ",object->firing);
+  lala += sprintf(lala,"  %d  ,",object->firing);
+  lala += sprintf(lala,"  %f  ",object->enemy_hp);
 }
 void write_matrix(char* buffer){
   Eigen::Matrix4f ieg;
@@ -123,6 +124,9 @@ void write_matrix(char* buffer){
   std::getline(iss, token, ',');
   int firing = stoi(token);
   music->setIsPaused(!firing);
+  std::getline(iss, token, ',');
+  int myhp = stof(token);
+  object->my_hp = myhp;
   //cout<<anim.size()<<endl;
 }
 
@@ -235,9 +239,10 @@ void vao_display(){
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
    if(t1-timebase > 1000){
+    cout<<"My HP:  "<<object->my_hp<<"  Enemy HP:  "<<object->enemy_hp<<endl;
     //std::cout<<count1<<endl;
     count1 = 0;   
-    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+    //std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }

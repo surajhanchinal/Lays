@@ -445,6 +445,7 @@ class AnimationObject{
         }
     }
     void enemyHitCall(){
+        enemy_hp -= 20;
         cout<<"Enemy hit"<<endl;
     }
     void DrawBullets(){
@@ -585,6 +586,8 @@ void initHitBoxes(){
     string curr_animation="RUN";
     string sent_animation= "RUN";
     bool firing = false;
+    float enemy_hp = 200;
+    float my_hp = 200;
     private:
     Mesh mesh;
     ArenaObject* arena;

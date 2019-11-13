@@ -56,7 +56,8 @@ void print_matrix(char* lala,Eigen::Matrix4f ieg){
     lala += sprintf(lala,"%f , ",ieg(i,3));
   }
   lala += sprintf(lala,"%f , ",theta);
-  lala += sprintf(lala,"%s  ","ABCD");
+  lala += sprintf(lala,"%s  ,","ABCD");
+  lala += sprintf(lala,"%s  ,  %s","1");
 }
 
 
