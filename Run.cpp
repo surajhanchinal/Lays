@@ -34,8 +34,9 @@ struct sockaddr_in serv_addr;
 struct hostent *server;
 char buffer[1024];
 float sensitivity = 0.001;
-GLuint  prog_hdlr,bone_hdlr,cross_hdlr,bullet_hdlr;
+GLuint  prog_hdlr,bone_hdlr,cross_hdlr,bullet_hdlr,text_hdlr;
 unsigned int VBO,lightVAO;
+GLuint textVAO, textVBO;
 bool flag=true;
 Camera *camera;
 Camera *tpCamera;
@@ -173,6 +174,76 @@ void drawCrossHair(){
     glDrawArrays(GL_TRIANGLES,0,36);
 }
 
+void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, Eigen::Vector3f color)
+{
+    glUseProgram(text_hdlr);
+    // Activate corresponding render state	
+    Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
+    float offset = 0.008;
+    m << 0.05,0,0,0,
+         0,0.05,0,0,
+         0,0,0.05,-0.5,
+         0,0,0,1;
+    
+    GLuint Matrixp = glGetUniformLocation(text_hdlr, "projection");
+    GLuint Matrixm = glGetUniformLocation(text_hdlr, "model");
+    glUniform1i(glGetUniformLocation(text_hdlr, "text"), 0);
+     
+    glUniformMatrix4fv(Matrixp, 1, GL_FALSE, camera->getProjectionMatrix().data());
+    glUniformMatrix4fv(Matrixm, 1, GL_FALSE, m.data());
+    glUniform3f(glGetUniformLocation(text_hdlr, "textColor"), color.x(), color.y(), color.z());
+    glBindVertexArray(textVAO);
+
+    // Iterate through all characters
+    std::string::const_iterator c;
+    int count = 0;
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        Character ch = texer.Characters[*c];
+
+        GLfloat xpos = x + ch.Bearing.x() * scale;
+        GLfloat ypos = y - (ch.Size.y() - ch.Bearing.y()) * scale;
+
+        GLfloat w = ch.Size.x() * scale;
+        GLfloat h = ch.Size.y() * scale;
+        // Update VBO for each character
+        GLfloat vertices[6][4] = {
+            { xpos,     ypos + h,   0.0, 0.0 },            
+            { xpos,     ypos,       0.0, 1.0 },
+            { xpos + w, ypos,       1.0, 1.0 },
+
+            { xpos,     ypos + h,   0.0, 0.0 },
+            { xpos + w, ypos,       1.0, 1.0 },
+            { xpos + w, ypos + h,   1.0, 0.0 }           
+        }; 
+        //cout<<xpos<<" "<<ypos<<" "<<w<<"  "<<h<<endl;
+        /* GLfloat vertices[6][4] = {
+            { 0.5,    0.5,   0.0, 0.0 },            
+            { 0.5,     -0.5,       0.0, 1.0 },
+            { -0.5, -0.5,       1.0, 1.0 },
+
+            { 0.5,     0.5,   0.0, 0.0 },
+            { -0.5, -0.5,       1.0, 1.0 },
+            { -0.5, 0.5,   1.0, 0.0 }           
+        }; */
+        // Render glyph texture over quad
+      //cout<<ch.TextureID<<endl;
+      glActiveTexture(GL_TEXTURE0);
+       glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+        // Update content of VBO memory
+         glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); 
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // Render quad
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+        x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
+
+    }
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 void setUnifs(GLuint shaderID){
    glUseProgram(shaderID);
@@ -232,6 +303,7 @@ void vao_display(){
     setUnifs(bullet_hdlr);
     object->DrawBullets();
    drawCrossHair();
+    RenderText("This is sample text", 2.5f, 0.0f, 0.01f, Eigen::Vector3f(0.5, 0.8f, 0.2f));
    
      
 
@@ -513,6 +585,7 @@ int main(int argc, char** argv) {
   setShaders(bone_hdlr, "shaders/light_vert.glsl", "shaders/light_frag.glsl");
   setShaders(cross_hdlr, "shaders/cross_vert.glsl", "shaders/cross_frag.glsl");
   setShaders(bullet_hdlr, "shaders/bullet_vert.glsl", "shaders/bullet_frag.glsl");
+  setShaders(text_hdlr, "shaders/text_vert.glsl", "shaders/text_frag.glsl");
 #endif
 
    float vertices[] = {
@@ -572,6 +645,29 @@ int main(int argc, char** argv) {
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    GLfloat textvertices[6][4] = {
+            { -0.5,    -0.5,   0.0, 0.0 },            
+            { -0.5,     0.5,       0.0, 1.0 },
+            { 0.5, 0.5,       1.0, 1.0 },
+
+            { -0.5,     -0.5,   0.0, 0.0 },
+            { 0.5, 0.5,       1.0, 1.0 },
+            { 0.5, -0.5,   1.0, 0.0 }           
+        };
+  glGenVertexArrays(1, &textVAO); 
+  glGenBuffers(1, &textVBO);
+  glBindVertexArray(textVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);  
+
+
+
+
 
     /* glBindVertexArray(cubeVAO);
 
@@ -633,6 +729,7 @@ int main(int argc, char** argv) {
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
     object->setArena(arena);
+    texer.loadCharacters();
 
     texer.TextureFromFile("./bullet_hole2.png","bullet");
     object->initBullets(100,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),20);

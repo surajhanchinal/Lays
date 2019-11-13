@@ -82,9 +82,73 @@ unsigned int TextureManager::TextureFromFile(string path, string name)
         stbi_image_free(data);
     }
     TextureManager::texture_lookup.insert(pair<string,int>(name,textureID));
+    cout<<"bullet tex ID:  "<<textureID<<endl;
     return textureID;
 }
 
+
+void TextureManager::loadCharacters(){
+
+    FT_Library ft;
+
+if(FT_Init_FreeType(&ft)) {
+  fprintf(stderr, "Could not init freetype library\n");
+  return;
+}
+
+
+FT_Face face;
+
+if(FT_New_Face(ft, "./fonts/arial.ttf", 0, &face)) {
+  fprintf(stderr, "Could not open font\n");
+  return;
+}
+
+FT_Set_Char_Size(face,0,16*64,300,300 );
+
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
+  
+for (GLubyte c = 0; c < 128; c++)
+{   
+    // Load character glyph 
+    if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+    {
+        cout<<FT_Load_Char(face, c, FT_LOAD_RENDER)<<endl;
+        std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+        continue;
+    }
+    // Generate texture
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RED,
+        face->glyph->bitmap.width,
+        face->glyph->bitmap.rows,
+        0,
+        GL_RED,
+        GL_UNSIGNED_BYTE,
+        face->glyph->bitmap.buffer
+    );
+    // Set texture options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Now store character for later use
+    //cout<<"c: "<<c<<"  "<<texture<<endl;
+    Character character = {
+        texture, 
+        Eigen::Vector2i(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+        Eigen::Vector2i(face->glyph->bitmap_left, face->glyph->bitmap_top),
+        face->glyph->advance.x
+    };
+    TextureManager::Characters.insert(std::pair<GLchar, Character>(c, character));
+}
+}
 
 
 GLuint TextureManager::getTextureID(string name){
