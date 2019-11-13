@@ -1,0 +1,20 @@
+if(isplayer1 and isplayer2):
+                    #if(arr[0] == player1):
+                    conn.sendall(player2data.encode())
+                    #if(arr[0] == player2):
+                    #    conn.sendall(player1data.encode())
+                else:
+                    if(myname == ""):
+                        myname = arr[0]
+                        print(myname)
+                    if((myname == player1) and isplayer1 == False):
+                        isplayer1 = True
+                    if((myname == player2) and isplayer2 == False):
+                        isplayer2 = True
+                        print("trued")
+                    if((myname == player1) and not isplayer2):
+                        conn.sendall(str.encode("Waiting for player 2 to connect"))
+                        #print("in1")
+                    if((myname == player2) and not isplayer1):
+                        conn.sendall(str.encode("Waiting for player 1 to connect"))
+                        #print("in2")

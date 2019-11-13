@@ -14,9 +14,11 @@
 #include "Bullet.h"
 #include "include/conio.h"
 #include "include/irrKlang.h"
-#include <sys/types.h> 
+#include <unistd.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #define USE_SHADERS 1
 
 
@@ -26,7 +28,11 @@ float bz = 0;
 float sx = 1;
 float sy = 1;
 float sz = 1;
-
+int player = 0;
+int sockfd, portno, n;
+struct sockaddr_in serv_addr;
+struct hostent *server;
+char buffer[1024];
 float sensitivity = 0.001;
 GLuint  prog_hdlr,bone_hdlr,cross_hdlr,bullet_hdlr;
 unsigned int VBO,lightVAO;
@@ -51,6 +57,70 @@ int count1 = 0;
 irrklang::ISoundEngine* engine;
 irrklang::ISound* music;
 Eigen::Vector3f LightPos(0,30,-10);
+
+void setup(int argc, char *argv[]){
+    if (argc < 4) {
+       fprintf(stderr,"usage %s hostname port\n", argv[0]);
+       exit(0);
+    }
+    portno = atoi(argv[2]);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) 
+        printf("ERROR opening socket\n");
+    server = gethostbyname(argv[1]);
+    if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);
+    int stat = connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+    if(stat < 0){
+        cout<<"Error connecting\n";
+    }
+}
+
+void print_matrix(char* lala){
+/* for(int i=0;i<4;i++){
+    for(int j=0;j<4;j++){
+        lala += sprintf(lala,"%f ",ieg(i,j));
+    }
+} */
+  for(int i=0;i<3;i++){
+    lala += sprintf(lala,"%f , ",object->out_model(i,3));
+  }
+  lala += sprintf(lala,"%f , ",object->theta_x);
+  lala += sprintf(lala,"%s  ",object->sent_animation.c_str());
+}
+void write_matrix(char* buffer){
+  Eigen::Matrix4f ieg;
+  string s(buffer);
+  istringstream iss(s);
+
+  string token;
+  Eigen::Vector3f pos;
+  for(int i=0;i<3;i++){
+    std::getline(iss, token, ',');
+    try {
+        pos[i] = std::stof(token);
+    } catch(...) {
+        return;
+    }
+    pos[i] = stof(token);
+  }
+  object2->out_model.block<3,1>(0,3) = pos;
+  std::getline(iss, token, ',');
+  object2->theta_x = stof(token);
+  std::getline(iss, token, ',');
+  string anim = token;
+  anim.erase(remove(anim.begin(), anim.end(), ' '), anim.end()); 
+  object2->setAnimation(anim);
+  //cout<<anim.size()<<endl;
+}
 
 void drawCrossHair(){
   float length = 2;
@@ -107,7 +177,7 @@ void setUnifs(GLuint shaderID){
 }
 
 void vao_display(){
-   glViewport(0, 0, 1920, 1022);
+   //glViewport(0, 0, 1920, 1022);
    glClearColor(0,0,0,0);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glEnable(GL_TEXTURE_2D);
@@ -166,6 +236,20 @@ void vao_display(){
 		timebase = t1;
 		frame = 0;
    }
+    char* lala = buffer;
+    lala += sprintf(lala,"p%d:",player);
+    print_matrix(lala);
+    n = write(sockfd, buffer, strlen(buffer));
+    if(n < 0)
+        cout<<"Error writing\n";
+    bzero(buffer,1024);
+    n = read( sockfd , buffer, 1024);
+    write_matrix(buffer);
+    if(n < 0)
+        cout<<"Error reading\n";
+    bzero(buffer,1024);
+
+
    glutSwapBuffers();
 }
 
@@ -267,7 +351,7 @@ void simpleKeyboard(unsigned char key, int x, int y)
   if('x' == key){
     //object->setAnimation("RECOIL");
     //cout<<endl<<object->fpCamera->getViewMatrix()<<endl;
-    //object2->setAnimation("RUN");
+    object2->setAnimation("JUMP");
     //cout<<" "<<sx<<" "<<sy<<" "<<sz<<" "<<bx<<endl;
   }
   if('k' == key){
@@ -562,6 +646,10 @@ int main(int argc, char** argv) {
     //cout<<camera->getProjectionMatrix()<<endl;
    //cout<<endl;
     //cout<<camera->getViewMatrix()<<endl;
+
+    setup(argc,argv);
+    player = atoi(argv[3]);
+
     glutMainLoop();
     return 0;
 }

@@ -32,23 +32,28 @@ class AnimationObject{
         }
 
         void setAnimation(string name){
+            auto itr = Loops.find(name);
+            if(itr == Loops.end()){
+                return;
+            }
             if(!jump_interrupt){
                 if(!name.compare("JUMP")){
                     jump_interrupt = true;
                     transition_matrix = lerp_matrix;
                     return;
                 }
-
-                    if(name.compare(next_animation)){
-                        next_animation = name;
-                        auto itr = Loops.find(curr_animation);
-                        auto next_itr = Loops.find(next_animation);
-                        next_itr->second.resetTransition();
-                        next_itr->second.setTime(itr->second.getTime());
-                        transition_matrix = lerp_matrix;
-                        in_transition = true;
-                    }
             }
+            if(name.compare(next_animation) && name.compare("JUMP")){
+                next_animation = name;
+                sent_animation = name;
+                auto itr = Loops.find(curr_animation);
+                auto next_itr = Loops.find(next_animation);
+                next_itr->second.resetTransition();
+                next_itr->second.setTime(itr->second.getTime());
+                transition_matrix = lerp_matrix;
+                in_transition = true;
+            }
+            //}
         }
         void updateAnimation(float deltatime){
             if(!jump_interrupt){
@@ -112,7 +117,8 @@ class AnimationObject{
             glUniformMatrix4fv(jtmt,final_matrix.size(),GL_FALSE,reinterpret_cast<GLfloat *>(final_matrix.data()));
             GLuint Matrixm = glGetUniformLocation(shader, "model");
             auto itr = Loops.find(curr_animation);
-            this->Move(deltatime,itr->second.getVelocity());
+            //this->Move(deltatime,itr->second.getVelocity());
+            out_model.block<3,3>(0,0) = Eigen::AngleAxis<float>(theta_x,Eigen::Vector3f(0,1,0)).toRotationMatrix();
             Eigen::Matrix4f model2 = Eigen::Matrix4f::Identity();
             model2.block<3,1>(0,3) = Eigen::Vector3f(50,6,0);
             Eigen::Matrix4f new_model = tpmatrix*(out_model*model);
@@ -560,6 +566,10 @@ void initHitBoxes(){
     Camera* fpCamera;
     Eigen::Matrix4f model;
     Eigen::Matrix4f out_model = Eigen::Matrix4f::Identity();
+    float theta_x = 0;
+    float theta_y = 0;
+    string curr_animation="RUN";
+    string sent_animation= "RUN";
     private:
     Mesh mesh;
     ArenaObject* arena;
@@ -567,7 +577,6 @@ void initHitBoxes(){
     AnimationObject *enemy;
     
     map<string,AnimationLoop> Loops;
-    string curr_animation="RUN";
     string next_animation="RUN";
     bool in_transition = false;
     bool jump_interrupt = false;
@@ -575,8 +584,7 @@ void initHitBoxes(){
     GLuint shader;
     Eigen::Affine3f aff;
     float angular_vel =  120;
-    float theta_x = 0;
-    float theta_y = 0;
+
     float acc = -9.8;
     float real_acc = -5;
     float height = 1;
