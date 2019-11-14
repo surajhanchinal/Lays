@@ -59,6 +59,8 @@ irrklang::ISoundEngine* engine;
 irrklang::ISound* music;
 Eigen::Vector3f LightPos(0,30,-10);
 
+void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, Eigen::Vector3f color);
+
 void setup(int argc, char *argv[]){
     if (argc < 4) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
@@ -111,6 +113,7 @@ void write_matrix(char* buffer){
     try {
         pos[i] = std::stof(token);
     } catch(...) {
+        RenderText("Waiting For Connection", -1.0f, 3.5f, 0.005f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
         return;
     }
     pos[i] = stof(token);
@@ -295,11 +298,14 @@ void vao_display(){
     //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     setUnifs(bullet_hdlr);
     object->DrawBullets();
-   drawCrossHair();
-    RenderText("This is sample text", 2.5f, 0.0f, 0.01f, Eigen::Vector3f(0.5, 0.8f, 0.2f));
-   
-     
-
+    drawCrossHair();
+    stringstream ss;
+    ss<<"Me: "<<object->my_hp;
+    RenderText(ss.str(), -7.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss.str("");
+    ss<<"Enemy: "<<object->enemy_hp;
+    RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss.str("");
 
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
