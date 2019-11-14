@@ -248,6 +248,16 @@ void setUnifs(GLuint shaderID){
    glUniformMatrix4fv(Matrixv, 1, GL_FALSE, camera->getViewMatrix().data());
 }
 
+void reset_Positions(){
+
+  if(player == 1){
+    object->out_model.block<3,1>(0,3) = Eigen::Vector3f(150,6,180);
+  }
+  else{
+    object->out_model.block<3,1>(0,3) = Eigen::Vector3f(-150,6,-180);
+  }
+}
+
 void checkAndUpdateScore(){
   if(object->enemy_hp>0 && object->my_hp>0){
     return;
@@ -259,7 +269,7 @@ void checkAndUpdateScore(){
   }
   object->my_hp=200;
   object->enemy_hp=200;
-  
+  reset_Positions();
 }
 
 void vao_display(){
@@ -326,10 +336,10 @@ void vao_display(){
     RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
     ss.str("");
     ss<<"MyScore: "<<object->my_score;
-    RenderText(ss.str(), -7.7f, 3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    RenderText(ss.str(), -7.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
     ss<<"YourScore: "<<object->enemy_score;
-    RenderText(ss.str(), 3.7f, 3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    RenderText(ss.str(), 3.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
 
    t1=glutGet(GLUT_ELAPSED_TIME);
@@ -814,10 +824,9 @@ int main(int argc, char** argv) {
     //cout<<camera->getProjectionMatrix()<<endl;
    //cout<<endl;
     //cout<<camera->getViewMatrix()<<endl;
-
     setup(argc,argv);
     player = atoi(argv[3]);
-
+    reset_Positions();
     glutMainLoop();
     return 0;
 }
