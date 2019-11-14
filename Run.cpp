@@ -248,11 +248,28 @@ void setUnifs(GLuint shaderID){
    glUniformMatrix4fv(Matrixv, 1, GL_FALSE, camera->getViewMatrix().data());
 }
 
+void checkAndUpdateScore(){
+  if(object->enemy_hp>0 && object->my_hp>0){
+    return;
+  }
+  if(object->enemy_hp<=0){
+    object->my_score++;
+  }else{
+    object->enemy_score++;
+  }
+  object->my_hp=200;
+  object->enemy_hp=200;
+  
+}
+
 void vao_display(){
+
+  checkAndUpdateScore();
+
 
     Eigen::Matrix4f mat_inv = object->out_model.inverse();
 
-    LightPos = mat_inv.block<3,3>(0,0)*Eigen::Vector3f(0,30,-10) + mat_inv.block<3,1>(0,3);
+  LightPos = mat_inv.block<3,3>(0,0)*Eigen::Vector3f(0,30,-10) + mat_inv.block<3,1>(0,3);
 
    Eigen::Vector3f dir_vec = Eigen::Vector3f(0,0,1);
    dir_vec = object->out_model.block<3,3>(0,0)*dir_vec;
@@ -307,6 +324,12 @@ void vao_display(){
     ss.str("");
     ss<<"Enemy: "<<object->enemy_hp;
     RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss.str("");
+    ss<<"MyScore: "<<object->my_score;
+    RenderText(ss.str(), -7.7f, 3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss.str("");
+    ss<<"YourScore: "<<object->enemy_score;
+    RenderText(ss.str(), 3.7f, 3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
     ss.str("");
 
    t1=glutGet(GLUT_ELAPSED_TIME);
