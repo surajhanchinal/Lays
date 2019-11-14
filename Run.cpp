@@ -275,6 +275,7 @@ void checkAndUpdateScore(){
   }
   if(object->my_hp <= 0){
     reset_Positions();
+    object->enemy_hp=200;
   }
   //object->my_hp=200;
   
