@@ -588,6 +588,8 @@ void initHitBoxes(){
     bool firing = false;
     float enemy_hp = 200;
     float my_hp = 200;
+    int my_score = 0;
+    int enemy_score = 0;
     private:
     Mesh mesh;
     ArenaObject* arena;

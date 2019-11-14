@@ -59,6 +59,8 @@ irrklang::ISoundEngine* engine;
 irrklang::ISound* music;
 Eigen::Vector3f LightPos(0,30,-10);
 
+std::unordered_map<char, bool> key_map;
+
 void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, Eigen::Vector3f color);
 
 void setup(int argc, char *argv[]){
@@ -246,11 +248,28 @@ void setUnifs(GLuint shaderID){
    glUniformMatrix4fv(Matrixv, 1, GL_FALSE, camera->getViewMatrix().data());
 }
 
+void checkAndUpdateScore(){
+  if(object->enemy_hp>0 && object->my_hp>0){
+    return;
+  }
+  if(object->enemy_hp<=0){
+    object->my_score++;
+  }else{
+    object->enemy_score++;
+  }
+  object->my_hp=200;
+  object->enemy_hp=200;
+  
+}
+
 void vao_display(){
+
+  checkAndUpdateScore();
+
 
     Eigen::Matrix4f mat_inv = object->out_model.inverse();
 
-    LightPos = mat_inv.block<3,3>(0,0)*Eigen::Vector3f(0,30,-10) + mat_inv.block<3,1>(0,3);
+  LightPos = mat_inv.block<3,3>(0,0)*Eigen::Vector3f(0,30,-10) + mat_inv.block<3,1>(0,3);
 
    Eigen::Vector3f dir_vec = Eigen::Vector3f(0,0,1);
    dir_vec = object->out_model.block<3,3>(0,0)*dir_vec;
@@ -305,6 +324,12 @@ void vao_display(){
     ss.str("");
     ss<<"Enemy: "<<object->enemy_hp;
     RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss.str("");
+    ss<<"MyScore: "<<object->my_score;
+    RenderText(ss.str(), -7.7f, 3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss.str("");
+    ss<<"YourScore: "<<object->enemy_score;
+    RenderText(ss.str(), 3.7f, 3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
     ss.str("");
 
    t1=glutGet(GLUT_ELAPSED_TIME);
@@ -377,17 +402,52 @@ void look( int x, int y ){
 }
 
 void keyUp(unsigned char key, int x, int y){
+  cout<<"release "<<key<<endl;
+  key_map[key]=false;
+  cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
+  if(key_map['w'] || key_map['a'] || key_map['s'] || key_map['d'] || key_map[' ']){
+    if(key_map['w']){
+      object->setAnimation("RUN");
+    }else if(key_map['a']){
+      object->setAnimation("RIGHT_SIDE");
+    }else if(key_map['s']){
+      object->setAnimation("BACK");
+    }else if(key_map['d']){
+      object->setAnimation("LEFT_SIDE");
+    }else if(key_map[' ']){
+      object->setAnimation("JUMP");
+    }
+    return;
+  }
+
+  cout<<"To stop"<<endl;
+  object->setAnimation("REST");
   //if(current_click == key){
-    if(('w' == key) || ('s' == key)){
+    /* if(('w' == key) || ('s' == key)){
       cout<<"W up"<<endl;
     object->setAnimation("REST");
   }
   if(('a' == key) || ('d' == key)){
   object->setAnimation("REST");
-  }
+  } */
   //}
-  
-  
+}
+
+void multiKeyboard(unsigned char key, int x, int y){
+  cout<<key<<" pressed."<<endl;
+  key_map[key]=true;
+  cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
+  if(key=='w'){
+    object->setAnimation("RUN");
+  }else if(key=='a'){
+    object->setAnimation("RIGHT_SIDE");
+  }else if(key=='s'){
+    object->setAnimation("BACK");
+  }else if(key=='d'){
+    object->setAnimation("LEFT_SIDE");
+  }else if(key==' '){
+    object->setAnimation("JUMP");
+  }
 }
 
 
@@ -562,7 +622,8 @@ int main(int argc, char** argv) {
     glutReshapeFunc(changeSize);
     glutIdleFunc(vao_display); 
     glutSpecialFunc(specialKeyFunction);
-    glutKeyboardFunc(simpleKeyboard);
+    // glutKeyboardFunc(simpleKeyboard);
+    glutKeyboardFunc(multiKeyboard);
     glutKeyboardUpFunc(keyUp);
     glutPassiveMotionFunc(look);
     glutMotionFunc(look);
