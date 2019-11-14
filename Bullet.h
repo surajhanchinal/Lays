@@ -55,7 +55,7 @@ public:
             GLuint bMatrixm = glGetUniformLocation(shader, "model");
             glActiveTexture(GL_TEXTURE0);
             glUniform1i(glGetUniformLocation(shader, "texture1"), 0);
-            glBindTexture(shader,texID);
+            glBindTexture(GL_TEXTURE_2D,texID);
             Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
             m.block<3,3>(0,0)=1*m.block<3,3>(0,0);
             m.block<3,1>(0,3) = Position;

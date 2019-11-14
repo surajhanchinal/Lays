@@ -216,18 +216,6 @@ void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, Eigen::Ve
             { xpos + w, ypos,       1.0, 1.0 },
             { xpos + w, ypos + h,   1.0, 0.0 }           
         }; 
-        //cout<<xpos<<" "<<ypos<<" "<<w<<"  "<<h<<endl;
-        /* GLfloat vertices[6][4] = {
-            { 0.5,    0.5,   0.0, 0.0 },            
-            { 0.5,     -0.5,       0.0, 1.0 },
-            { -0.5, -0.5,       1.0, 1.0 },
-
-            { 0.5,     0.5,   0.0, 0.0 },
-            { -0.5, -0.5,       1.0, 1.0 },
-            { -0.5, 0.5,   1.0, 0.0 }           
-        }; */
-        // Render glyph texture over quad
-      //cout<<ch.TextureID<<endl;
       glActiveTexture(GL_TEXTURE0);
        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
         // Update content of VBO memory
@@ -729,9 +717,10 @@ int main(int argc, char** argv) {
     object->setShader(prog_hdlr);
     object->setAnimation("REST");
     object->setArena(arena);
-    texer.loadCharacters();
 
+    texer.loadCharacters();
     texer.TextureFromFile("./bullet_hole2.png","bullet");
+
     object->initBullets(100,bullet_hdlr,lightVAO,texer.getTextureID("bullet"),20);
     tpCamera = new Camera(Eigen::Vector3f(11,11,-17),Eigen::Vector3f(0,1,0),45.0f,1920.0f/1022.0f,0.1f,1000.0f,0.1,-0.9);
     camera = object->fpCamera;
