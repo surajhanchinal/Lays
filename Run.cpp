@@ -377,12 +377,26 @@ void vao_display(){
 void click(int button,int state,int x,int y){
   if(button == GLUT_LEFT_BUTTON){
     if(state == GLUT_UP){
+      key_map['l'] = false;
+      if(key_map['w']){
+      object->setAnimation("RUN");
+    }else if(key_map['a']){
+      object->setAnimation("RIGHT_SIDE");
+    }else if(key_map['s']){
+      object->setAnimation("BACK");
+    }else if(key_map['d']){
+      object->setAnimation("LEFT_SIDE");
+    }else if(key_map[' ']){
+      object->setAnimation("JUMP");
+    }
+
       object->setAnimation("REST");
       object->stopFire();
       //music->setIsPaused(true);
       cout<<"release"<<endl;
     }
     if(state == GLUT_DOWN){
+      key_map['l'] = true;
       object->setAnimation("RECOIL");
       object->startFire();
       //music->setIsPaused(false);
@@ -416,7 +430,10 @@ void keyUp(unsigned char key, int x, int y){
   key_map[key]=false;
   cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
   if(key_map['w'] || key_map['a'] || key_map['s'] || key_map['d'] || key_map[' ']){
-    if(key_map['w']){
+    if(key_map['l']){
+      object->setAnimation("RECOIL");
+    }
+    else if(key_map['w']){
       object->setAnimation("RUN");
     }else if(key_map['a']){
       object->setAnimation("RIGHT_SIDE");
