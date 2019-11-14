@@ -329,16 +329,16 @@ void vao_display(){
     object->DrawBullets();
     drawCrossHair();
     stringstream ss;
-    ss<<"Me: "<<object->my_hp;
-    RenderText(ss.str(), -7.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss<<"Player 1: "<<object->my_hp<<" HP";
+    RenderText(ss.str(), -7.7f, -3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
-    ss<<"Enemy: "<<object->enemy_hp;
-    RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(0.0, 0.0f, 0.0f));
+    ss<<"Player 2: "<<object->enemy_hp<<" HP";
+    RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
-    ss<<"MyScore: "<<object->my_score;
+    ss<<"My Score: "<<object->my_score;
     RenderText(ss.str(), -7.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
-    ss<<"YourScore: "<<object->enemy_score;
+    ss<<"Enemy Score: "<<object->enemy_score;
     RenderText(ss.str(), 3.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
 
