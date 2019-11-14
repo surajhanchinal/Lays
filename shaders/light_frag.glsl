@@ -7,7 +7,7 @@ uniform vec3 LightPos;
 void main()
 {
     // ambient
-    float ambient = 0.4;
+    float ambient = 0.7;
   	
     // diffuse 
     vec3 norm = normalize(Normal);
@@ -15,7 +15,7 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     
     // specular
-    //float specularStrength = 0.5;
+    //float specularStrength = 0.2;
     //vec3 viewDir = normalize(viewPos - FragPos);
     //vec3 reflectDir = reflect(-lightDir, norm);  
     //float spec = specularStrength*pow(max(dot(viewDir, reflectDir), 0.0), 32);
