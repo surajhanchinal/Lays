@@ -274,7 +274,7 @@ void checkAndUpdateScore(){
 
 void vao_display(){
 
-  checkAndUpdateScore();
+  
 
 
     Eigen::Matrix4f mat_inv = object->out_model.inverse();
@@ -364,7 +364,7 @@ void vao_display(){
     if(n < 0)
         cout<<"Error reading\n";
     bzero(buffer,1024);
-
+    checkAndUpdateScore();
     //LightPos = Eigen::Vector3f(0,30,-10);
    glutSwapBuffers();
 }
