@@ -378,6 +378,8 @@ void click(int button,int state,int x,int y){
   if(button == GLUT_LEFT_BUTTON){
     if(state == GLUT_UP){
       key_map['l'] = false;
+      cout<<"Mouse released"<<endl;
+      cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
       if(key_map['w']){
       object->setAnimation("RUN");
     }else if(key_map['a']){
@@ -390,7 +392,7 @@ void click(int button,int state,int x,int y){
       object->setAnimation("JUMP");
     }
 
-      object->setAnimation("REST");
+      //object->setAnimation("REST");
       object->stopFire();
       //music->setIsPaused(true);
       cout<<"release"<<endl;
