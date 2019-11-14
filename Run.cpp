@@ -101,7 +101,8 @@ void print_matrix(char* lala){
   lala += sprintf(lala,"%f , ",object->theta_x);
   lala += sprintf(lala,"%s  ,",object->sent_animation.c_str());
   lala += sprintf(lala,"  %d  ,",object->firing);
-  lala += sprintf(lala,"  %f  ",object->enemy_hp);
+  lala += sprintf(lala,"  %f  ,",object->enemy_hp);
+  lala += sprintf(lala,"  %d  ",object->my_score);
 }
 void write_matrix(char* buffer){
   Eigen::Matrix4f ieg;
@@ -133,6 +134,10 @@ void write_matrix(char* buffer){
   std::getline(iss, token, ',');
   int myhp = stof(token);
   object->my_hp = myhp;
+
+  std::getline(iss, token, ',');
+  int enemyscore = stoi(token);
+  object->enemy_score = enemyscore;
   //cout<<anim.size()<<endl;
 }
 
@@ -264,12 +269,15 @@ void checkAndUpdateScore(){
   }
   if(object->enemy_hp<=0){
     object->my_score++;
-  }else{
-    object->enemy_score++;
+    object->enemy_hp=200;
+    reset_Positions();
+
   }
-  object->my_hp=200;
-  object->enemy_hp=200;
-  reset_Positions();
+  if(object->my_hp <= 0){
+    reset_Positions();
+  }
+  //object->my_hp=200;
+  
 }
 
 void vao_display(){
