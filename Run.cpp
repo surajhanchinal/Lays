@@ -244,6 +244,11 @@ void setUnifs(GLuint shaderID){
 }
 
 void vao_display(){
+
+    Eigen::Matrix4f mat_inv = object->out_model.inverse();
+
+    LightPos = mat_inv.block<3,3>(0,0)*Eigen::Vector3f(0,30,-10) + mat_inv.block<3,1>(0,3);
+
    Eigen::Vector3f dir_vec = Eigen::Vector3f(0,0,1);
    dir_vec = object->out_model.block<3,3>(0,0)*dir_vec;
    music->setPosition(irrklang::vec3df(object2->out_model(0,3),object2->out_model(1,3),object2->out_model(2,3)));
@@ -319,7 +324,7 @@ void vao_display(){
         cout<<"Error reading\n";
     bzero(buffer,1024);
 
-
+    //LightPos = Eigen::Vector3f(0,30,-10);
    glutSwapBuffers();
 }
 
