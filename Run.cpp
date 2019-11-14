@@ -333,22 +333,21 @@ void vao_display(){
     RenderText(ss.str(), -7.7f, -3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
     ss<<"Player 2: "<<object->enemy_hp<<" HP";
-    RenderText(ss.str(), 3.7f, -3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
+    RenderText(ss.str(), 2.7f, -3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
     ss<<"My Score: "<<object->my_score;
     RenderText(ss.str(), -7.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
     ss<<"Enemy Score: "<<object->enemy_score;
-    RenderText(ss.str(), 3.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
+    RenderText(ss.str(), 2.7f, 3.5f, 0.01f, Eigen::Vector3f(1.0, 1.0f, 1.0f));
     ss.str("");
 
    t1=glutGet(GLUT_ELAPSED_TIME);
    frame++;
    if(t1-timebase > 1000){
-    cout<<"My HP:  "<<object->my_hp<<"  Enemy HP:  "<<object->enemy_hp<<endl;
     //std::cout<<count1<<endl;
     count1 = 0;   
-    //std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
+    std::cout<<"FPS: "<<frame*1000.0/(t1-timebase)<<std::endl;
 		timebase = t1;
 		frame = 0;
    }
@@ -364,6 +363,7 @@ void vao_display(){
     if(n < 0)
         cout<<"Error reading\n";
     bzero(buffer,1024);
+    //cout<<"My HP:  "<<object->my_hp<<"  Enemy HP:  "<<object->enemy_hp<<endl;
     checkAndUpdateScore();
     //LightPos = Eigen::Vector3f(0,30,-10);
    glutSwapBuffers();
@@ -378,8 +378,8 @@ void click(int button,int state,int x,int y){
   if(button == GLUT_LEFT_BUTTON){
     if(state == GLUT_UP){
       key_map['l'] = false;
-      cout<<"Mouse released"<<endl;
-      cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
+      //cout<<"Mouse released"<<endl;
+      //cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
       if(key_map['w']){
       object->setAnimation("RUN");
     }else if(key_map['a']){
@@ -395,14 +395,14 @@ void click(int button,int state,int x,int y){
       //object->setAnimation("REST");
       object->stopFire();
       //music->setIsPaused(true);
-      cout<<"release"<<endl;
+      //cout<<"release"<<endl;
     }
     if(state == GLUT_DOWN){
       key_map['l'] = true;
       object->setAnimation("RECOIL");
       object->startFire();
       //music->setIsPaused(false);
-      cout<<"catch"<<endl;
+      //cout<<"catch"<<endl;
     }
   }
 }
@@ -428,9 +428,9 @@ void look( int x, int y ){
 }
 
 void keyUp(unsigned char key, int x, int y){
-  cout<<"release "<<key<<endl;
+  //cout<<"release "<<key<<endl;
   key_map[key]=false;
-  cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
+  //cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
   if(key_map['w'] || key_map['a'] || key_map['s'] || key_map['d'] || key_map[' ']){
     if(key_map['l']){
       object->setAnimation("RECOIL");
@@ -449,7 +449,7 @@ void keyUp(unsigned char key, int x, int y){
     return;
   }
 
-  cout<<"To stop"<<endl;
+  //cout<<"To stop"<<endl;
   object->setAnimation("REST");
   //if(current_click == key){
     /* if(('w' == key) || ('s' == key)){
@@ -463,9 +463,9 @@ void keyUp(unsigned char key, int x, int y){
 }
 
 void multiKeyboard(unsigned char key, int x, int y){
-  cout<<key<<" pressed."<<endl;
+  //cout<<key<<" pressed."<<endl;
   key_map[key]=true;
-  cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
+  //cout<<"key_map[ w a s d ]"<<" [ "<<key_map['w']<<" "<<key_map['a']<<" "<<key_map['s']<<" "<<key_map['d']<<" ]"<<endl;
   if(key=='w'){
     object->setAnimation("RUN");
   }else if(key=='a'){
